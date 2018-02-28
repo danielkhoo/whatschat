@@ -24,7 +24,9 @@ import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -43,6 +45,7 @@ import javax.swing.JPanel;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
+import javax.swing.plaf.basic.BasicScrollPaneUI.HSBChangeListener;
 
 
 public class Whatschat {
@@ -64,6 +67,8 @@ public class Whatschat {
 	private ArrayList<User> userList;
 	private User currentUser, selectedProfile;
 	int currentPage = 1 ;// 1 is userprofile , 2 ischat
+	boolean firstTimer;
+	
 	
 	//===============daniel==============11
 	MulticastSocket multicastSocket = null;
@@ -165,9 +170,13 @@ public class Whatschat {
 							datagramHandler(pkt);
 							System.out.println("Recieved String");
 						}
-						if(recievedDataObject instanceof ArrayList<?>){
+						else if(recievedDataObject instanceof ArrayList<?>){
 							userList=(ArrayList<User>) convertBytesToObject(receivedData,length);
 							System.out.println("Recieved Array: "+userList.size());
+						}
+						else if(recievedDataObject instanceof User){
+							selectedProfile = (User)convertBytesToObject(receivedData, length);
+							System.out.println("Recieved User: "+selectedProfile.getUsername());
 						}
 						
 						
@@ -254,7 +263,8 @@ public class Whatschat {
 					try {
 						userAvail = true;
 						String checkPkt = "CU:" + tfUserId.getText().trim() + ":" + PID;
-						System.out.println("btnRegister: "+checkPkt);
+						System.out.println("btnRegister: "+tfUserId.getText().trim());
+						
 						
 						//RegisterationSide
 						byte[] buf = checkPkt.getBytes();
@@ -262,6 +272,7 @@ public class Whatschat {
 						userMulticastSocket.send(dgpCheckUser);
 						
 						//Profile Side -YH
+						
 						byte[] buf2 = convertObjectToBytes(userList);
 						DatagramPacket dgpUserList = new DatagramPacket(buf2, buf.length, userMulticastGroup, 6789);
 						userMulticastSocket.send(dgpUserList);
@@ -280,6 +291,7 @@ public class Whatschat {
 							//@@@@@@@@@@@@@@@@@@@@@@@@@@YH@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
 							String[] splittedString = checkPkt.split(":");
 							selectedProfile= new User();
+							firstTimer=true;
 							currentUser = new User(splittedString[1]);
 							frame.getContentPane().setBackground(Color.WHITE);
 							sideMenu();
@@ -321,6 +333,7 @@ public class Whatschat {
 					//Check if myID = ID requested & check if the PID != the PID of request
 					if (packet[1].equals(myID.trim()) && !(PID.equals(packet[2]))) {
 						String response = "UR:True:" + packet[2].toString();
+						System.out.println("Response: "+response );
 						byte[] buf = response.getBytes();
 						DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
 						userMulticastSocket.send(dgpCheckUser);
@@ -468,7 +481,6 @@ public class Whatschat {
 		lblProfile.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-//				userProfile();
 				System.out.println("Profile clicked");
 				selectedPanel.setBounds(0, 170, 255, 59);
 				selectedPanel.setBackground(selectedColor);
@@ -485,12 +497,19 @@ public class Whatschat {
 //				groupChat();
 				
 				//ArrayList Part
-				for(User u: userList){
-					if(u.getUsername().equalsIgnoreCase(currentUser.getUsername())){
-						u.setDescription(currentUser.getDescription());
-						u.setProfilePicture(currentUser.getProfilePicture());		
+				if(firstTimer){
+					userList.add(currentUser);
+					firstTimer=false;
+				}
+				else{
+					for(User u: userList){
+						if(u.getUsername().equalsIgnoreCase(currentUser.getUsername())){
+							u.setDescription(currentUser.getDescription());
+							u.setProfilePicture(currentUser.getProfilePicture());		
+						}
 					}
 				}
+
 				
 				
 				//Network Part
@@ -525,6 +544,32 @@ public class Whatschat {
 		}
 		
 	}
+	
+	private void viewProfile(String userName){
+		try {
+			
+			System.out.println("Checking userList:" +userList.size());
+			
+			for(User u : userList){
+				if(u.getUsername().equalsIgnoreCase(userName)){
+					selectedProfile = u;
+				}
+			}
+			byte[] buf = convertObjectToBytes(selectedProfile);
+			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+			userMulticastSocket.send(dgpCheckUser);
+			TimeUnit.MILLISECONDS.sleep(1000);
+			
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+	}
+	//======================================Profile===================================
 	
 	//====================================Groupchat page=====================================
 	private void groupChat(){
@@ -621,6 +666,18 @@ public class Whatschat {
 		btnViewProfile.setForeground(Color.WHITE);
 		btnViewProfile.setBounds(121, 170, 107, 25);
 		onlineUsersPanel.add(btnViewProfile);
+		
+		btnViewProfile.addActionListener(new ActionListener() {
+			@Override
+			public void actionPerformed(ActionEvent e) {
+				// Network and go to layout
+				viewProfile(onlineUserlist.getSelectedValue()+"");
+				whatschatGroupChat.setVisible(false);
+				whatsChatProfilePanel.setVisible(true);
+				
+				
+			}
+		});
 		
 		groupPanel = new JPanel();
 		groupPanel.setBounds(10, 483, 350, 208);
@@ -719,7 +776,6 @@ public class Whatschat {
 	//====================================user profile page======================================
 	private void userProfile(){
 		//Recive Request
-		//profileRecieveRequest();
 		//===============================Interface=================================================
 		whatsChatProfilePanel = new JPanel();
 		whatsChatProfilePanel.setBackground(Color.WHITE);
@@ -965,7 +1021,9 @@ public class Whatschat {
 			ex.printStackTrace();
 		}
 	}
+
 	
+	//--------------------------------------Phone-------------------------------
 	// Add Member
 	public void addMember(List list) {
 		try {
