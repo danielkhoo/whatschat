@@ -486,7 +486,7 @@ public class Whatschat {
 				selectedPanel.setBackground(selectedColor);
 				whatschatGroupChat.setVisible(false);
 				whatsChatProfilePanel.setVisible(true);
-				currentPage=2;
+				currentPage=1;
 			}
 		});
 		
@@ -500,6 +500,7 @@ public class Whatschat {
 				if(firstTimer){
 					userList.add(currentUser);
 					firstTimer=false;
+					System.out.println("firstTime:True");
 				}
 				else{
 					for(User u: userList){
@@ -508,6 +509,8 @@ public class Whatschat {
 							u.setProfilePicture(currentUser.getProfilePicture());		
 						}
 					}
+					
+					System.out.println("firstTime:False");
 				}
 
 				
@@ -528,48 +531,7 @@ public class Whatschat {
 		
 	}
 	
-	private void profileSendRequest(){
-		try {
-			byte[] buf = convertObjectToBytes(userList);
-			System.out.println("Checking userList:" +userList.size());
-			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
-			userMulticastSocket.send(dgpCheckUser);
-			TimeUnit.MILLISECONDS.sleep(1000);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-	}
-	
-	private void viewProfile(String userName){
-		try {
-			
-			System.out.println("Checking userList:" +userList.size());
-			
-			for(User u : userList){
-				if(u.getUsername().equalsIgnoreCase(userName)){
-					selectedProfile = u;
-				}
-			}
-			byte[] buf = convertObjectToBytes(selectedProfile);
-			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
-			userMulticastSocket.send(dgpCheckUser);
-			TimeUnit.MILLISECONDS.sleep(1000);
-			
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-	}
-	//======================================Profile===================================
+
 	
 	//====================================Groupchat page=====================================
 	private void groupChat(){
@@ -674,6 +636,7 @@ public class Whatschat {
 				viewProfile(onlineUserlist.getSelectedValue()+"");
 				whatschatGroupChat.setVisible(false);
 				whatsChatProfilePanel.setVisible(true);
+				reloadProfile();
 				
 				
 			}
@@ -772,7 +735,7 @@ public class Whatschat {
 	}
 	
 	
-	//====================================user profile page======================================
+	
 	//====================================user profile page======================================
 	private void userProfile(){
 		//Recive Request
@@ -833,27 +796,7 @@ public class Whatschat {
 		//=================================Network part==============================================
 		
 		//=================================Setting Page==============================================
-		
-		if(currentPage==1){
-			//currentUser = new User();
-			lblProfilePicture.setIcon(scaledImage(currentUser.getProfilePicture(),lblProfilePicture,null));
-			lblUserId.setText("UserID: "+currentUser.getUsername());
-			txtrDescription.setText(currentUser.getDescription());
-			btnSubmitEdit.setVisible(true);
-			btnSubmitEdit.setEnabled(true);
-			btnAttachButton.setEnabled(true);
-			btnAttachButton.setVisible(true);
-
-		}
-		else if(currentPage==2){
-			lblProfilePicture.setIcon(scaledImage(selectedProfile.getProfilePicture(),lblProfilePicture,null));
-			lblUserId.setText("UserID: "+selectedProfile.getUsername());
-			txtrDescription.setText(selectedProfile.getDescription());	
-			btnSubmitEdit.setVisible(false);
-			btnSubmitEdit.setEnabled(false);
-			btnAttachButton.setEnabled(false);
-			btnAttachButton.setVisible(false);
-		}
+		reloadProfile();
 		
 		//================================Button Action==============================================
 		btnCancel.addActionListener(new ActionListener() {
@@ -937,7 +880,74 @@ public class Whatschat {
 		
 	}
 	
+	//======================================Profile===================================
+	private void profileSendRequest(){
+		try {
+			byte[] buf = convertObjectToBytes(userList);
+			System.out.println("Checking userList:" +userList.size());
+			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+			userMulticastSocket.send(dgpCheckUser);
+			TimeUnit.MILLISECONDS.sleep(1000);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+	}
 	
+	private void viewProfile(String userName){
+		try {
+			
+			System.out.println("Checking userList:" +userList.size());
+			
+			for(User u : userList){
+				if(u.getUsername().equalsIgnoreCase(userName)){
+					selectedProfile = u;
+					
+				}
+			}
+			byte[] buf = convertObjectToBytes(selectedProfile);
+			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+			userMulticastSocket.send(dgpCheckUser);
+			TimeUnit.MILLISECONDS.sleep(1000);
+			
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
+		
+	}
+	
+	private void reloadProfile(){
+		if(currentPage==1){
+			//currentUser = new User();
+			lblProfilePicture.setIcon(scaledImage(currentUser.getProfilePicture(),lblProfilePicture,null));
+			lblUserId.setText("UserID: "+currentUser.getUsername());
+			txtrDescription.setText(currentUser.getDescription());
+			btnSubmitEdit.setVisible(true);
+			btnSubmitEdit.setEnabled(true);
+			btnAttachButton.setEnabled(true);
+			btnAttachButton.setVisible(true);
+
+		}
+		else if(currentPage==2){
+			lblProfilePicture.setIcon(scaledImage(selectedProfile.getProfilePicture(),lblProfilePicture,null));
+			lblUserId.setText("UserID: "+selectedProfile.getUsername());
+			txtrDescription.setText(selectedProfile.getDescription());	
+			btnSubmitEdit.setVisible(false);
+			btnSubmitEdit.setEnabled(false);
+			btnAttachButton.setEnabled(false);
+			btnAttachButton.setVisible(false);
+		}
+		System.out.println("CurrentPAge:"+currentPage);
+	}
+	//======================================Profile===================================
 	
 	
 
