@@ -550,13 +550,13 @@ public class Whatschat {
 		memberList.setBounds(543, 42, 189, 265);
 		mainChatPanel.add(memberList);
 		memberList.setBorder(border);
-		
 		taConverstaion = new JTextArea();
 		taConverstaion.setBounds(0, 0, 544, 307);
 		mainChatPanel.add(taConverstaion);
 		taConverstaion.setEditable(false);
 		taConverstaion.setBorder(border);
 		taConverstaion.setBackground(Color.WHITE);
+		//taConverstaion.setBackground(Color.GREEN);
 		
 
 		
@@ -568,6 +568,7 @@ public class Whatschat {
 		conversationPanel.setLayout(null);
 		
 		taComment = new JTextArea();
+		//taComment.setBackground(Color.BLACK);
 		taComment.setText("Comment");
 		taComment.setBounds(12, 13, 535, 77);
 		conversationPanel.add(taComment);
