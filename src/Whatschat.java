@@ -534,6 +534,13 @@ public class Whatschat {
 		whatschatGroupChat.add(mainChatPanel);
 		mainChatPanel.setLayout(null);
 		
+		btnRemove = new JButton("Remove");
+		btnRemove.setBounds(596, 265, 102, 29);
+		mainChatPanel.add(btnRemove);
+		btnRemove.setBackground(buttonColor);
+		btnRemove.setBorder(null);
+		btnRemove.setForeground(Color.WHITE);
+		
 		lblMembers = new JLabel("Members");
 		lblMembers.setBounds(596, 8, 90, 29);
 		mainChatPanel.add(lblMembers);
@@ -551,12 +558,7 @@ public class Whatschat {
 		taConverstaion.setBorder(border);
 		taConverstaion.setBackground(Color.WHITE);
 		
-		btnRemove = new JButton("Remove");
-		btnRemove.setBounds(0, 0, 102, 29);
-		mainChatPanel.add(btnRemove);
-		btnRemove.setBackground(buttonColor);
-		btnRemove.setBorder(null);
-		btnRemove.setForeground(Color.WHITE);
+
 		
 		conversationPanel = new JPanel();
 		conversationPanel.setBounds(0, 367, 732, 103);
@@ -629,6 +631,7 @@ public class Whatschat {
 		
 		groupsList = new JList();
 		groupsList.setBounds(12, 24, 326, 139);
+		//groupsList.setBackground(Color.BLUE); //To check if display
 		groupPanel.add(groupsList);
 		
 		groupTitlePanel = new JPanel();
