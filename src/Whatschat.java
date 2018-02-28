@@ -128,6 +128,7 @@ public class Whatschat {
 		PID = ManagementFactory.getRuntimeMXBean().getName();//Track process ID for each application
 		users = new ArrayList<String>();//Instantiate list of online users
 		userList = new ArrayList<User>();//Instantiate list of online users
+		firstTimer = true;
 		
 		//Create multicast address 
 		try {
@@ -150,11 +151,29 @@ public class Whatschat {
 						userMulticastSocket.receive(dgpReceived);
 						byte[] receivedData = dgpReceived.getData();
 						int length = dgpReceived.getLength();
-						String command = new String(receivedData, 0, length);
-						String[] pkt = command.split(":");
-						datagramHandler(pkt);
+						
+						
+						//Check: new String, String, arrayList<user> //YanHsia
+						
+						Object recievedDataObject = convertBytesToObject(receivedData,length);
+						
+						
+						if(recievedDataObject instanceof String){
+							String command = new String(receivedData, 0, length);
+							String[] pkt = command.split(":");
+							datagramHandler(pkt);
+							System.out.println("Recieved String");
+						}
+						else if(recievedDataObject instanceof ArrayList<?>){
+							userList=(ArrayList<User>) convertBytesToObject(receivedData,length);
+							System.out.println("Recieved Array: "+userList.size());
+						}
+						
 					} catch (IOException ex) {
 						ex.printStackTrace();
+					} catch (ClassNotFoundException e) {
+						// TODO Auto-generated catch block
+						e.printStackTrace();
 					}
 				}
 			}
@@ -485,6 +504,7 @@ public class Whatschat {
 	private void profileSendRequest(){
 		try {
 			byte[] buf = convertObjectToBytes(userList);
+			System.out.println("Checking userList:" +userList.size());
 			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
 			userMulticastSocket.send(dgpCheckUser);
 			TimeUnit.MILLISECONDS.sleep(1000);
@@ -884,10 +904,15 @@ public class Whatschat {
 		    } 
 		}
 	 
-	 private static Object convertBytesToObject(byte[] bytes) throws IOException, ClassNotFoundException {
+	 private static Object convertBytesToObject(byte[] bytes, int size) throws IOException, ClassNotFoundException {
 		    try (ByteArrayInputStream bis = new ByteArrayInputStream(bytes);
 		         ObjectInput in = new ObjectInputStream(bis)) {
 		    	return in.readObject();
-		    } 
+		    }catch(Exception e){
+		    	String a = new String(bytes, 0, size);
+		    	System.out.println("aa_"+a);
+		    	return a;
+		    }
+			
 		}
 }
