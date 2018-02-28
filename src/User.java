@@ -6,17 +6,20 @@ public class User implements Serializable {
 	String username;
 	String profilePicture;
 	String description;
-	HashMap<String, String> groupName;
 	
 	
-
 
 
 	public User(){
-		username= "";
-		profilePicture ="";
+		this.username= "";
+		profilePicture ="profilepage_icon.png";
 		description="";
-		groupName=new HashMap<String, String>();
+	}
+	
+	public User(String username){
+		this.username= username;
+		profilePicture ="profilepage_icon.png";
+		description="";
 	}
 	
 	
@@ -52,14 +55,6 @@ public class User implements Serializable {
 	}
 	public void setDescription(String description) {
 		this.description = description;
-	}
-	
-	public HashMap<String, String> getGroupName() {
-		return groupName;
-	}
-
-	public void setGroupName(HashMap<String, String> groupName) {
-		this.groupName = groupName;
 	}
 	
 

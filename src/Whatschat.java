@@ -56,11 +56,15 @@ public class Whatschat {
 	private JTextField txtTitle; //Groupchat
 	
 	//Profile Variable
-	private JLabel lblProfilePicture,lblimgSrc;
+	private JLabel lblProfilePicture,lblimgSrc,lblUserId;
 	private JButton btnNewButton,btnAttachButton,btnSubmitEdit,btnCancel;
 	private JTextArea txtrDescription;
 	private JFileChooser chooser;
 	private ImageIcon ii;
+	private ArrayList<User> userList;
+	private User currentUser, selectedProfile;
+	private boolean firstTimer;
+	int currentPage = 1 ;// 1 is userprofile , 2 ischat
 	
 	//===============daniel==============11
 	MulticastSocket multicastSocket = null;
@@ -97,10 +101,7 @@ public class Whatschat {
 	
 	private Border border;
 	private Color primaryColor,selectedColor,buttonColor, headerColor;
-	//Profile
-	User userProfile; 
-	ArrayList<User> userList;
-	int currentPage = 1 ;// 1 is userprofile , 2 ischat
+
 	/**
 	 * Launch the application.
 	 */
@@ -126,6 +127,7 @@ public class Whatschat {
 		System.setProperty("java.net.preferIPv4Stack", "true");
 		PID = ManagementFactory.getRuntimeMXBean().getName();//Track process ID for each application
 		users = new ArrayList<String>();//Instantiate list of online users
+		userList = new ArrayList<User>();//Instantiate list of online users
 		
 		//Create multicast address 
 		try {
@@ -173,7 +175,6 @@ public class Whatschat {
 		primaryColor = new Color(18,22,49);
 		selectedColor = new Color(50,53,74);
 		buttonColor = new Color(46,56,125);
-		userProfile= new User();
 		headerColor = new Color(46,56,125);
 		
 		//@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@JoeyCode-Dialog Close@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
@@ -249,13 +250,16 @@ public class Whatschat {
 //							userMulticastSocket.send(dgpNewUser);
 							
 							//@@@@@@@@@@@@@@@@@@@@@@@@@@YH@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@
+							String[] splittedString = checkPkt.split(":");
+							selectedProfile= new User();
+							currentUser = new User(splittedString[1]);
 							frame.getContentPane().setBackground(Color.WHITE);
 							sideMenu();
 							groupChat();
-							//userProfile();
+							userProfile();
 							whatschatHomePanel.setVisible(false);
-							whatschatGroupChat.setVisible(true);
-							//whatsChatProfilePanel.setVisible(true);
+							whatschatGroupChat.setVisible(false);
+							whatsChatProfilePanel.setVisible(true);
 							currentPage=1;
 							
 							
@@ -276,9 +280,7 @@ public class Whatschat {
 	}
 	
 	/*@@@@@@@@@@@@@@@@@JoeyCode@@@@@@@@@@@*/
-	private void datagramHandlerProfile(){
-		
-	}
+
 	private void datagramHandler(String[] packet){
 		//CU - Check User
 		//GU - Get Users
@@ -418,21 +420,12 @@ public class Whatschat {
 		
 		//----------------------------------------Design Group Chat Part---------------------------------------------------
 		JLabel lblGroupChat = new JLabel(new ImageIcon(".\\images\\groupchat_icon.png"));
-		lblGroupChat.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-			}
-		});
+
 		lblGroupChat.setBounds(0, 240, 250, 59);
 		sidePanel.add(lblGroupChat);
 		
 		JLabel lblProfile = new JLabel(new ImageIcon(".\\images\\profile_icon.png"));
-		lblProfile.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				System.out.println("Mouse Clicked");
-			}
-		});
+
 		lblProfile.setBounds(0, 170, 252, 59);
 		sidePanel.add(lblProfile);
 		
@@ -441,82 +434,67 @@ public class Whatschat {
 		selectedPanel.setBackground(selectedColor);
 		sidePanel.add(selectedPanel);
 		
-		lblProfile.addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
+		lblProfile.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
 //				userProfile();
+				System.out.println("Profile clicked");
 				selectedPanel.setBounds(0, 170, 255, 59);
 				selectedPanel.setBackground(selectedColor);
 				whatschatGroupChat.setVisible(false);
-				//whatsChatProfilePanel.setVisible(true);
+				whatsChatProfilePanel.setVisible(true);
 				currentPage=2;
 			}
 		});
 		
-		lblGroupChat.addMouseListener(new MouseListener() {
-			
-			@Override
-			public void mouseReleased(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mousePressed(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseExited(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
-			@Override
-			public void mouseEntered(MouseEvent e) {
-				// TODO Auto-generated method stub
-				
-			}
-			
+		lblGroupChat.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
+//				userProfile();
 //				groupChat();
+				//ArrayList Part
+				if(firstTimer){
+					userList.add(currentUser);
+					firstTimer=false;
+				}
+				else{
+					for(User u: userList){
+						if(u.getUsername().equalsIgnoreCase(currentUser.getUsername())){
+							u.setDescription(currentUser.getDescription());
+							u.setProfilePicture(currentUser.getProfilePicture());		
+						}
+					}
+				}
+				
+				//Network Part
+				profileSendRequest();
+
+				//Interface part
 				System.out.println("Groupchat clicked");
+				whatsChatProfilePanel.setVisible(false);
 				whatschatGroupChat.setVisible(true);
-				//whatsChatProfilePanel.setVisible(false);
+				
 				currentPage=2;
 				selectedPanel.setBounds(0, 240, 255, 59);
-				
-				
 			}
 		});
 		
+		
+	}
+	
+	private void profileSendRequest(){
+		try {
+			byte[] buf = convertObjectToBytes(userList);
+			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+			userMulticastSocket.send(dgpCheckUser);
+			TimeUnit.MILLISECONDS.sleep(1000);
+		} catch (IOException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		} catch (InterruptedException e1) {
+			// TODO Auto-generated catch block
+			e1.printStackTrace();
+		}
 		
 	}
 	
@@ -697,8 +675,11 @@ public class Whatschat {
 	
 	
 	//====================================user profile page======================================
+	//====================================user profile page======================================
 	private void userProfile(){
-		
+		//Recive Request
+		//profileRecieveRequest();
+		//===============================Interface=================================================
 		whatsChatProfilePanel = new JPanel();
 		whatsChatProfilePanel.setBackground(Color.WHITE);
 		whatsChatProfilePanel.setBounds(249, 0, 733, 750);
@@ -713,18 +694,6 @@ public class Whatschat {
 		lblimgSrc.setBounds(12, 246, 399, 16);
 		whatsChatProfilePanel.add(lblimgSrc);
 		lblimgSrc.setForeground(Color.LIGHT_GRAY);
-		
-
-		if(userProfile.getProfilePicture()=="" || userProfile.getProfilePicture()==null ){
-			lblProfilePicture.setIcon(scaledImage("profilepage_icon.png",lblProfilePicture,null));
-		}
-		else{
-			lblProfilePicture.setIcon(scaledImage(userProfile.getProfilePicture(),lblProfilePicture,null));
-		}
-
-		
-		//If user click attach...
-		
 			
 		btnAttachButton = new JButton("Attach");
 		btnAttachButton.setBounds(91, 214, 97, 25);
@@ -732,24 +701,16 @@ public class Whatschat {
 		btnAttachButton.setBackground(buttonColor);
 		btnAttachButton.setBorder(null);
 		btnAttachButton.setForeground(Color.WHITE);
-		JLabel lblUserId = new JLabel("");
+		lblUserId = new JLabel("");
 		lblUserId.setBounds(254, 45, 325, 44);
 		whatsChatProfilePanel.add(lblUserId);
 		lblUserId.setFont(new Font("Bookman Old Style", Font.BOLD, 16));
-		if(userProfile.getUsername()=="" || userProfile.getUsername()==null){
-			lblUserId.setText("UserID: No user ID");
-		}else{
-			lblUserId.setText("UserID: "+userProfile.getUsername());
-		}
-		
 		
 		txtrDescription = new JTextArea();
 		txtrDescription.setBounds(253, 92, 441, 113);
 		whatsChatProfilePanel.add(txtrDescription);
 		txtrDescription.setBorder(border);
 		txtrDescription.setDisabledTextColor(Color.BLACK);
-		
-		//Default Setting and button action
 		txtrDescription.setEnabled(false);
 		
 		btnSubmitEdit = new JButton("Edit");
@@ -772,6 +733,32 @@ public class Whatschat {
 		btnCancel.setEnabled(false);
 		btnCancel.setVisible(false);
 		
+		//=================================Network part==============================================
+		
+		//=================================Setting Page==============================================
+		
+		if(currentPage==1){
+			//currentUser = new User();
+			lblProfilePicture.setIcon(scaledImage(currentUser.getProfilePicture(),lblProfilePicture,null));
+			lblUserId.setText("UserID: "+currentUser.getUsername());
+			txtrDescription.setText(currentUser.getDescription());
+			btnSubmitEdit.setVisible(true);
+			btnSubmitEdit.setEnabled(true);
+			btnAttachButton.setEnabled(true);
+			btnAttachButton.setVisible(true);
+
+		}
+		else if(currentPage==2){
+			lblProfilePicture.setIcon(scaledImage(selectedProfile.getProfilePicture(),lblProfilePicture,null));
+			lblUserId.setText("UserID: "+selectedProfile.getUsername());
+			txtrDescription.setText(selectedProfile.getDescription());	
+			btnSubmitEdit.setVisible(false);
+			btnSubmitEdit.setEnabled(false);
+			btnAttachButton.setEnabled(false);
+			btnAttachButton.setVisible(false);
+		}
+		
+		//================================Button Action==============================================
 		btnCancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
@@ -802,29 +789,11 @@ public class Whatschat {
 					txtrDescription.setEnabled(false);
 					txtrDescription.setBorder(null);
 					btnCancel.setEnabled(false);
-					btnCancel.setVisible(false);
-					
+					btnCancel.setVisible(false);	
 					btnSubmitEdit.setText("Edit");
 					
-					//Network Part. Update user Profile
-					/*
-					for(User u : userList){
-						if(u.getUsername().equals(userProfile.getUsername())){
-							u.setDescription(txtrDescription.getText().toString());
-							
-						}
-					}*/
-					/*
-					byte[] buf;
-					try {
-						buf = convertObjectToBytes(userList);
-						DatagramPacket dgpUpdate = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-						multicastSocket.send(dgpUpdate);
-					} catch (IOException e) {
-						// TODO Auto-generated catch block
-						e.printStackTrace();
-					}*/
-					
+					//User Part
+					currentUser.setDescription(txtrDescription.getText().toString());
 					
 				}
 				
@@ -841,33 +810,16 @@ public class Whatschat {
 			    String filename = f.getAbsolutePath();
 			    if(filename.endsWith(".jpg") || filename.endsWith(".png")){
 				    try {
-				        ii=scaledImage(userProfile.getUsername()+".png", lblProfilePicture, ImageIO.read(new File(f.getAbsolutePath())));//get the image from file chooser and scale it to match JLabel size
+				    	String fileName=currentUser.getUsername()+".png";
+				        ii=scaledImage(fileName, lblProfilePicture, ImageIO.read(new File(f.getAbsolutePath())));//get the image from file chooser and scale it to match JLabel size
 				        lblProfilePicture.setIcon(ii);
 				        lblimgSrc.setText(filename);
 				        lblimgSrc.setForeground(Color.gray);
 				        
-				        //do network
-				        
-						//Network Part. Update user Profile
-				        /*
-						for(User u : userList){
-							if(u.getUsername().equals(userProfile.getUsername())){
-								u.setProfilePicture(u.getUsername()+".png");
-							}
+						//User Part
+						currentUser.setProfilePicture(fileName);
 						
-						}*/
-						
-				        /*
-						byte[] buf;
-						try {
-							buf = convertObjectToBytes(userList);
-							DatagramPacket dgpUpdate = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-							multicastSocket.send(dgpUpdate);
-						} catch (IOException e1) {
-							// TODO Auto-generated catch block
-							e1.printStackTrace();
-						}
-						*/
+				       
 						
 				    } catch (Exception ex) {
 				    	lblimgSrc.setText("Incorrect File Source. Please Upload again.");
