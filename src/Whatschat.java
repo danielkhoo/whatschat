@@ -23,8 +23,11 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
+import java.util.Base64;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Random;
+import java.util.Set;
 import java.util.concurrent.TimeUnit;
 
 import javax.imageio.ImageIO;
@@ -53,7 +56,7 @@ public class Whatschat {
 	private JList memberList,onlineUserlist,groupsList;
 	private JTextArea taConverstaion,taComment;
 	private JButton btnRemove,btnSend,btnAdd,btnViewProfile,btnCreate,btnLeave,btnEdit;
-	private JTextField txtTitle; //Groupchat
+	private JTextField txtTitle,txtNewGroupName; //Groupchat
 	
 	//Profile Variable
 	private JLabel lblProfilePicture,lblimgSrc;
@@ -127,11 +130,18 @@ public class Whatschat {
 		PID = ManagementFactory.getRuntimeMXBean().getName();//Track process ID for each application
 		users = new ArrayList<String>();//Instantiate list of online users
 		
+		
+		
 		//Create multicast address 
 		try {
 			userMulticastGroup = InetAddress.getByName("230.1.1.1");
 			userMulticastSocket = new MulticastSocket(6789);
 			userMulticastSocket.joinGroup(userMulticastGroup);
+			
+			//daniel
+			multicastSocket = new MulticastSocket(6789);
+			
+			
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -158,7 +168,9 @@ public class Whatschat {
 			}
 
 		}).start();
-		
+		backgroundThread();//daniel
+		//String groupIP = "JOIN:dude:group1";
+		//sendBroadcast(groupIP, defaultGroup, defaultSocket, 6789);
 		
 		initialize();
 	}
@@ -566,7 +578,6 @@ public class Whatschat {
 		conversationPanel.setLayout(null);
 		
 		taComment = new JTextArea();
-		taComment.setText("Comment");
 		taComment.setBounds(12, 13, 535, 77);
 		conversationPanel.add(taComment);
 		
@@ -587,7 +598,9 @@ public class Whatschat {
 		onlineUsersPanel.setLayout(null);
 		
 		
-		
+		listModelUsers.addElement("user1");
+		listModelUsers.addElement("user2");
+		listModelUsers.addElement("user3");
 		onlineUserlist = new JList(listModelUsers);//daniel
 		onlineUserlist.setBounds(12, 20, 322, 116);//daniel
 		onlineUsersPanel.add(onlineUserlist);
@@ -613,18 +626,24 @@ public class Whatschat {
 		groupPanel.setBorder(BorderFactory.createTitledBorder("Groups"));
 		groupPanel.setBackground(Color.WHITE);
 		
+		//daniel
+		txtNewGroupName = new JTextField();
+		txtNewGroupName.setBounds(12, 176, 97, 25);
+		txtNewGroupName.setText("group1");
+		groupPanel.add(txtNewGroupName);
+		
 		btnCreate = new JButton("Create");
 		btnCreate.setBackground(buttonColor);
 		btnCreate.setBorder(null);
 		btnCreate.setForeground(Color.WHITE);
-		btnCreate.setBounds(12, 176, 97, 25);
+		btnCreate.setBounds(121, 176, 97, 25);
 		groupPanel.add(btnCreate);
 		
 		btnLeave = new JButton("Leave");
 		btnLeave.setBackground(buttonColor);
 		btnLeave.setBorder(null);
 		btnLeave.setForeground(Color.WHITE);
-		btnLeave.setBounds(121, 176, 97, 25);
+		btnLeave.setBounds(230, 176, 97, 25);
 		groupPanel.add(btnLeave);
 		
 		groupsList = new JList();
@@ -681,13 +700,52 @@ public class Whatschat {
 			}
 		});
 		
-		btnSend.addActionListener(new ActionListener() {
+		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-				System.out.println("PLEASE");
+				System.out.println("CREATE");
+				//Check if group exists
+				String groupName = txtNewGroupName.getText().trim();
+				String check = "GET:"+groupName;
+				sendBroadcast(check, defaultGroup, defaultSocket, 6789);
 				
-				System.out.println(listModelUsers.getSize());
+				//If group name is unique create the group
+				if(!groupHashMap.containsKey(groupName)) {
+					Random num = new Random();
+					String ip = "228.0.0."+num.nextInt(256);
+					String groupIP = "SET:"+groupName +":"+ip;
+					sendBroadcast(groupIP, defaultGroup, defaultSocket, 6789);
+					
+					
+					//txtJoinGroup.setText(groupName);
+					
+					groupHashMap.put(groupName, ip);
+					//selfjoin
+					joinChatGroup(groupName);
+					
+					
+					// get each user in the list and send them join command
+					int selected[]= onlineUserlist.getSelectedIndices();
+					for(int i=0; i<selected.length;i++) {
+						String msg = "JOIN:"+listModelUsers.getElementAt(selected[i])+":group1";
+						sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+					}
+				}
+				
 			}
 		});
+		
+		btnSend.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				System.out.println("SEND");
+				
+				String msg = taComment.getText().toString();	
+				System.out.println(msg);
+				msg = activeGroupName+":"+username+ ": " + msg;
+				sendBroadcast(msg, multicastGroup, multicastSocket, 6789);
+			}
+		});
+		
+		
 
 	}
 	
@@ -884,9 +942,203 @@ public class Whatschat {
 		
 	}
 	
+	//====================================daniel======================================
+	//====================================daniel======================================
+	private static void sendBroadcast(String message, InetAddress address, MulticastSocket socket,int port) {
+		try {
+			byte[] buffer = message.getBytes();
+			DatagramPacket dgpSend = new DatagramPacket(buffer, buffer.length, address, port);
+			socket.send(dgpSend);
+		} catch(IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 	
+	private void joinChatGroup(String groupName) {
+		try {
+			System.out.println(username + " JOIN FUNCTION " + groupName);
+			if (multicastSocket == null) {
+				multicastSocket = new MulticastSocket(6789);
+			}
+			
+			if (groupHashMap.get(groupName) == null) {
+				System.out.println(username + " trying to join " + groupName);
+				String check = "GET:" + groupName;
+				sendBroadcast(check, defaultGroup, defaultSocket, 6789);
+			}
+			try {
+				Thread.sleep(500);
+			} catch (InterruptedException e1) {
+				e1.printStackTrace();
+			}
+			
+			if (groupHashMap.get(groupName) == null) {
+				System.out.println("Room does not exist");
+			} else {
+				multicastGroup = InetAddress.getByName(groupHashMap.get(groupName) );
+				multicastSocket.joinGroup(multicastGroup);
+				activeGroupName = groupName; //Set active group
+				
+				//Update GROUPS to show ACTIVE
+				//listModelGroups.insertElementAt(groupName, listModelGroups.getSize());
+				//listGroups.setSelectedIndex(listModelGroups.getSize()-1);
+				
+				//Send a joined message
+				//String message = activeGroupName+":"+username + " joined";
+				//sendBroadcast(message,multicastGroup,multicastSocket,6789);
+				String msg1 = "GETMESSAGE:"+activeGroupName+":"+username + ":joined";		
+				sendBroadcast(msg1, multicastGroup, multicastSocket, 6789);
+				
+				
+				
+				//Create a new thread to for messages within a group
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						byte buf1[] = new byte[1000];
+						DatagramPacket dgpReceived = new DatagramPacket(buf1, buf1.length, multicastGroup, 6789);
+						while(true) {
+							try {
+								multicastSocket.receive(dgpReceived);
+								byte[] receivedData = dgpReceived.getData();
+								int length = dgpReceived.getLength();
+								//Assuming we receive string
+								String msg = new String(receivedData, 0, length);
+								if (msg != null) {
+									System.out.println("Message received, active group \n"+msg);
+									String[] data = msg.split(":");
+									//===================================== GET/SET PAST MESSAGES =====================================
+									if (data[0].equals("SETMESSAGE") && messageHashMap.get(data[1]) == null){
+										System.out.println(username +" receive SETMESSAGE");
+										if (username.equalsIgnoreCase(data[2])) { //Is self post
+											System.out.println("receive array");	
+											int start =data[0].length()+data[1].length()+data[2].length()+3;
+											System.out.println(msg.substring(start));	
+											messageHashMap.put(data[1], msg.substring(start));
+											
+											if(activeGroupName.equalsIgnoreCase(data[1])) {
+												taConverstaion.setText(messageHashMap.get(data[1]));
+											}
+										}
+									}
+									else if (data[0].equals("GETMESSAGE") && data.length!=1){
+										System.out.println(username +" receive GETMESSAGE");
+										if (!username.equalsIgnoreCase(data[2])) { //Is not self post
+											System.out.println("send array");
+											
+											
+											
+											String temp = messageHashMap.get(data[1]);
+											System.out.println(temp);
+											String message = "SETMESSAGE:"+data[1]+":"+data[2]+":"+temp;
+											sendBroadcast(message, multicastGroup, multicastSocket, 6789);
+										}
+									}											
+									
+									//===================================== NORMAL CHAT =====================================
+									
+									else if (messageHashMap.get(data[0])==null) {
+										//Add to the message hashmap
+										messageHashMap.put(data[0],msg + "\n");
+									}
+									else{
+										String temp = messageHashMap.get(data[0]);
+										messageHashMap.put(data[0],temp+msg + "\n");
+									}
+									if(activeGroupName.equalsIgnoreCase(data[0])) {
+										taConverstaion.setText(messageHashMap.get(data[0]));
+									}
+								}
+							} catch (IOException ex) {
+								ex.printStackTrace();
+							}
+						}
+					}
+				}).start();
+			}
+			
+		}catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 	
+	private void backgroundThread() {
+		//Background thread for groups 
+				try {
+					defaultGroup = InetAddress.getByName(defaultIP);
+					if (defaultSocket == null)
+						defaultSocket = new MulticastSocket(6789);
+					defaultSocket.joinGroup(defaultGroup);
+						
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							byte buf[] = new byte[1000];
+							DatagramPacket dgpReceived = new DatagramPacket(buf, buf.length, defaultGroup, 6789);
+							while(true) {
+								try {
+									defaultSocket.receive(dgpReceived);
+									byte[] receivedData = dgpReceived.getData();
+									int length = dgpReceived.getLength();
+									//Assuming we receive string
+									String msg = new String(receivedData, 0, length);
+									System.out.println("default," +msg);
+									username = myID;
+									if (msg != null) {
+										String[] data = msg.split(":");
+										
+										//===================================== GET/SET Group IP =====================================
+										if (data[0].equals("SET") && groupHashMap.get(data[1]) == null) {//If data is a GROUP update
+											System.out.println(username +" receive SET");
+											//Add to the hashmap
+											groupHashMap.put(data[1],data[2]);
+										}
+										else if (data[0].equals("GET") && data.length!=1) {//If data is a GET of the group list, reply with IP from hashmap
+											System.out.println(username +" receive GET");
+											if (groupHashMap.get(data[1]) != null) {
+												System.out.println("send SET");
+												String groupIP = "SET:"+data[1]+":"+groupHashMap.get(data[1]);
+												sendBroadcast(groupIP, defaultGroup, defaultSocket, 6789);
+											}
+										}	
+										else if (data[0].equals("JOIN")) {
+											if(data[1].equals(username)) {
+												System.out.println(username +"join "+data[2]);
+												joinChatGroup(data[2]);
+											}
+										}
+										
+									}
+								} catch(IOException ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
+					}).start();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
+	}
 	
+	public String serializeArray(final String[] data) {
+	    try (final ByteArrayOutputStream boas = new ByteArrayOutputStream();
+	         final ObjectOutputStream oos = new ObjectOutputStream(boas)) {
+	        oos.writeObject(data);
+	        return Base64.getEncoder().encodeToString(boas.toByteArray());
+	    } catch (IOException e) {
+	        throw new RuntimeException(e);
+	    }
+	}
+	public String[] deserializeArray(final String data) {
+	    try (final ByteArrayInputStream bias = new ByteArrayInputStream(Base64.getDecoder().decode(data));
+	         final ObjectInputStream ois = new ObjectInputStream(bias)) {
+	        return (String[]) ois.readObject();
+	    } catch (IOException | ClassNotFoundException e) {
+	        throw new RuntimeException(e);
+	    }
+	}
+	//====================================daniel======================================
+	//====================================daniel======================================
 
 	
 	//=============================================Additional Icon============================================

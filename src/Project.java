@@ -169,85 +169,8 @@ public class Project extends JFrame {
 		JButton btnJoin = new JButton("Join");
 		btnJoin.setBounds(257, 108, 101, 29);
 		
+		background();
 		
-		//Background thread for groups 
-		try {
-			defaultGroup = InetAddress.getByName(defaultIP);
-			if (defaultSocket == null)
-				defaultSocket = new MulticastSocket(6789);
-			defaultSocket.joinGroup(defaultGroup);
-
-			new Thread(new Runnable() {
-				@Override
-				public void run() {
-					byte buf[] = new byte[1000];
-					DatagramPacket dgpReceived = new DatagramPacket(buf, buf.length, defaultGroup, 6789);
-					while(true) {
-						try {
-							defaultSocket.receive(dgpReceived);
-							byte[] receivedData = dgpReceived.getData();
-							int length = dgpReceived.getLength();
-							//Assuming we receive string
-							String msg = new String(receivedData, 0, length);
-							//System.out.println(username + ":" +msg);
-							if (msg != null) {
-								String[] data = msg.split(":");
-								
-								//===================================== GET/SET Group IP =====================================
-								if (data[0].equals("SET") && groupHashMap.get(data[1]) == null) {//If data is a GROUP update
-									//System.out.println(username +" receive SET");
-									//Add to the hashmap
-									groupHashMap.put(data[1],data[2]);
-									//System.out.println(username + ": 1Add new group:"+data[1]+"@"+data[2]);
-								}
-								else if (data[0].equals("GET") && data.length!=1) {//If data is a GET of the group list, reply with IP from hashmap
-									//System.out.println(username +" receive GET");
-									if (groupHashMap.get(data[1]) != null) {
-										String groupIP = "SET:"+data[1]+":"+groupHashMap.get(data[1]);
-										sendBroadcast(groupIP, defaultGroup, defaultSocket, 6789);
-									}
-								}
-								
-								//===================================== GET/SET Log-On =====================================
-								else if(data[0].equals("SETLOGON")) {
-									//System.out.println(username +" receive SETLOGON");
-									//Receive array of users
-									String[] array = deserializeArray(data[1]);
-									listModelUsers.clear();
-									for (String item : array) {
-										System.out.println(item);
-										onlineHashMap.put(item,1);
-										listModelUsers.addElement(item);
-									}
-								}
-								else if (data[0].equals("GETLOGON") && data.length!=1){
-									//System.out.println(username +" receive GETLOGON");
-									if (onlineHashMap.get(data[1]) == null) { //Not a self request
-										onlineHashMap.put(data[1],1); //Put new item into onlineHashMap
-										//Serial array and send over broadcast to all users
-										Set<String> keys = onlineHashMap.keySet();
-										String[] array = keys.toArray(new String[keys.size()]);
-										System.out.println(keys.toString());
-										
-										String message = "SETLOGON:"+serializeArray(array);
-										sendBroadcast(message, defaultGroup, defaultSocket, 6789);
-									}
-									else {
-									}
-								}
-								
-								
-								
-							}
-						} catch(IOException ex) {
-							ex.printStackTrace();
-						}
-					}
-				}
-			}).start();
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
 		
 		
 		
@@ -273,8 +196,6 @@ public class Project extends JFrame {
 		
 		btnCreate.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
-
-
 					//Check if group exists
 					String groupName = txtCreateGroup.getText();
 					String check = "GET:"+groupName;
@@ -299,8 +220,6 @@ public class Project extends JFrame {
 						btnJoin.doClick();
 						
 					}
-				
-				
 			}
 		});
 		contentPane.add(btnCreate);
@@ -507,6 +426,87 @@ public class Project extends JFrame {
 		} catch(IOException ex) {
 			ex.printStackTrace();
 		}
+	}
+	
+	private void background() {
+		//Background thread for groups 
+				try {
+					defaultGroup = InetAddress.getByName(defaultIP);
+					if (defaultSocket == null)
+						defaultSocket = new MulticastSocket(6789);
+					defaultSocket.joinGroup(defaultGroup);
+
+					new Thread(new Runnable() {
+						@Override
+						public void run() {
+							byte buf[] = new byte[1000];
+							DatagramPacket dgpReceived = new DatagramPacket(buf, buf.length, defaultGroup, 6789);
+							while(true) {
+								try {
+									defaultSocket.receive(dgpReceived);
+									byte[] receivedData = dgpReceived.getData();
+									int length = dgpReceived.getLength();
+									//Assuming we receive string
+									String msg = new String(receivedData, 0, length);
+									//System.out.println(username + ":" +msg);
+									if (msg != null) {
+										String[] data = msg.split(":");
+										
+										//===================================== GET/SET Group IP =====================================
+										if (data[0].equals("SET") && groupHashMap.get(data[1]) == null) {//If data is a GROUP update
+											System.out.println(username +" receive SET");
+											//Add to the hashmap
+											groupHashMap.put(data[1],data[2]);
+											//System.out.println(username + ": 1Add new group:"+data[1]+"@"+data[2]);
+										}
+										else if (data[0].equals("GET") && data.length!=1) {//If data is a GET of the group list, reply with IP from hashmap
+											System.out.println(username +" receive GET");
+											if (groupHashMap.get(data[1]) != null) {
+												String groupIP = "SET:"+data[1]+":"+groupHashMap.get(data[1]);
+												sendBroadcast(groupIP, defaultGroup, defaultSocket, 6789);
+											}
+										}
+										
+										//===================================== GET/SET Log-On =====================================
+										else if(data[0].equals("SETLOGON")) {
+											//System.out.println(username +" receive SETLOGON");
+											//Receive array of users
+											String[] array = deserializeArray(data[1]);
+											listModelUsers.clear();
+											for (String item : array) {
+												System.out.println(item);
+												onlineHashMap.put(item,1);
+												listModelUsers.addElement(item);
+											}
+										}
+										else if (data[0].equals("GETLOGON") && data.length!=1){
+											//System.out.println(username +" receive GETLOGON");
+											if (onlineHashMap.get(data[1]) == null) { //Not a self request
+												onlineHashMap.put(data[1],1); //Put new item into onlineHashMap
+												//Serial array and send over broadcast to all users
+												Set<String> keys = onlineHashMap.keySet();
+												String[] array = keys.toArray(new String[keys.size()]);
+												System.out.println(keys.toString());
+												
+												String message = "SETLOGON:"+serializeArray(array);
+												sendBroadcast(message, defaultGroup, defaultSocket, 6789);
+											}
+											else {
+											}
+										}
+										
+										
+										
+									}
+								} catch(IOException ex) {
+									ex.printStackTrace();
+								}
+							}
+						}
+					}).start();
+				} catch (IOException ex) {
+					ex.printStackTrace();
+				}
 	}
 	
 	private static void displayCreateWindow() {
