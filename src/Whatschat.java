@@ -2,6 +2,7 @@ import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
 import java.awt.Image;
+import java.awt.ScrollPane;
 import java.awt.event.ActionEvent;
 import java.awt.event.ActionListener;
 import java.awt.event.MouseAdapter;
@@ -41,9 +42,11 @@ import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JList;
 import javax.swing.JOptionPane;
+import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
 import javax.swing.JPanel;
+import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
@@ -59,17 +62,19 @@ public class Whatschat {
 	private JTextArea taConverstaion,taComment;
 	private JButton btnRemove,btnSend,btnAdd,btnViewProfile,btnCreate,btnLeave,btnEdit;
 	private JTextField txtTitle,txtNewGroupName; 
+	private ScrollPane converstationScroll,commentScroll;
 	
 	//Profile Variable
 	private JLabel lblProfilePicture,lblimgSrc,lblUserId;
-	private JButton btnAttachButton,btnSubmitEdit,btnCancel;
-	private JTextArea txtrDescription;
+	private JButton btnAttachButton,btnSubmitEdit,btnCancel,btnBack;
+	private JTextArea taDescription;
 	private JFileChooser chooser;
 	private ImageIcon ii;
 	private ArrayList<User> userList;
 	private User currentUser, selectedProfile;
 	int currentPage = 1 ;// 1 is userprofile , 2 ischat
 	boolean firstTimer;
+	private ScrollPane descriptionScroll;
 	
 	
 	//===============daniel==============11
@@ -347,7 +352,7 @@ public class Whatschat {
 						if(!users.contains(packet[1])){
 							//Add ID into arraylist if it does not exists
 							users.add(packet[1]);
-							//userList.add(new User(packet[1])); //yh
+							userList.add(new User(packet[1])); //yh
 							listModelUsers.addElement(packet[1]);//daniel
 						}
 						//Sends a reply to let new user know of your current ID
@@ -382,7 +387,7 @@ public class Whatschat {
 					//Adds userID into arraylist if it does not exist in arraylist
 					if(!(users.contains(packet[1]))){
 						users.add(packet[1]);
-						//userList.add(new User(packet[1]));//yh
+						userList.add(new User(packet[1]));//yh
 						listModelUsers.addElement(packet[1]);//daniel
 					}
 				}
@@ -562,12 +567,17 @@ public class Whatschat {
 		mainChatPanel.add(memberList);
 		memberList.setBorder(border);
 		
+		
+		//textarea and conversation
+		JScrollPane scrollPaneConversation = new JScrollPane();
+		scrollPaneConversation.setBounds(0, 0, 544, 307);
 		taConverstaion = new JTextArea();
-		taConverstaion.setBounds(0, 0, 544, 307);
-		mainChatPanel.add(taConverstaion);
+		scrollPaneConversation.setViewportView(taConverstaion);
 		taConverstaion.setEditable(false);
 		taConverstaion.setBorder(border);
 		taConverstaion.setBackground(Color.WHITE);
+		mainChatPanel.add(scrollPaneConversation);
+		
 		
 		btnRemove = new JButton("Remove");
 		btnRemove.setBounds(0, 0, 102, 29);
@@ -583,9 +593,12 @@ public class Whatschat {
 		conversationPanel.setBorder(BorderFactory.createLineBorder(headerColor));
 		conversationPanel.setLayout(null);
 		
+		//JscrollPane And textARea
+		JScrollPane scrollPaneComment = new JScrollPane();
+		scrollPaneComment.setBounds(12, 13, 535, 77);
 		taComment = new JTextArea();
-		taComment.setBounds(12, 13, 535, 77);
-		conversationPanel.add(taComment);
+		scrollPaneComment.setViewportView(taComment);
+		conversationPanel.add(scrollPaneComment);
 		
 		btnSend = new JButton("Send");
 		btnSend.setBounds(597, 39, 97, 41);
@@ -805,12 +818,23 @@ public class Whatschat {
 		whatsChatProfilePanel.add(lblUserId);
 		lblUserId.setFont(new Font("Bookman Old Style", Font.BOLD, 16));
 		
-		txtrDescription = new JTextArea();
-		txtrDescription.setBounds(253, 92, 441, 113);
-		whatsChatProfilePanel.add(txtrDescription);
-		txtrDescription.setBorder(border);
-		txtrDescription.setDisabledTextColor(Color.BLACK);
-		txtrDescription.setEnabled(false);
+		
+		
+		
+		
+		//textarea
+		JScrollPane scrollPane = new JScrollPane();
+		scrollPane.setBounds(253, 92, 441, 113);
+		
+		taDescription = new JTextArea();
+		taDescription.setBorder(border);
+		taDescription.setDisabledTextColor(Color.BLACK);
+		taDescription.setEnabled(false);
+		taDescription.setLineWrap(true);
+		taDescription.setWrapStyleWord(true);
+		scrollPane.setViewportView(taDescription);
+		whatsChatProfilePanel.add(scrollPane);
+		
 		
 		btnSubmitEdit = new JButton("Edit");
 		btnSubmitEdit.setBounds(594, 212, 97, 25);
@@ -832,21 +856,36 @@ public class Whatschat {
 		btnCancel.setEnabled(false);
 		btnCancel.setVisible(false);
 		
-		//=================================Network part==============================================
+		btnBack = new JButton("Back");
+		btnBack.setBounds(334, 439, 127, 44);
+		btnBack.setBackground(buttonColor);
+		btnBack.setForeground(Color.WHITE);
+		btnBack.setBorder(null);
+		btnBack.setVisible(false);
+		whatsChatProfilePanel.add(btnBack);
 		
 		//=================================Setting Page==============================================
 		reloadProfile();
 		
 		//================================Button Action==============================================
+		btnBack.addActionListener(new ActionListener() {
+			
+			@Override
+			public void actionPerformed(ActionEvent arg0) {
+				System.out.println("Button Back");
+				whatsChatProfilePanel.setVisible(false);
+				whatschatGroupChat.setVisible(true);
+			}
+		});
 		btnCancel.addActionListener(new ActionListener() {
 			@Override
 			public void actionPerformed(ActionEvent e) {
-				txtrDescription.setEnabled(false);
-				txtrDescription.setBorder(null);
+				taDescription.setEnabled(false);
+				taDescription.setBorder(null);
 				btnCancel.setEnabled(false);
 				btnCancel.setVisible(false);
 				btnSubmitEdit.setText("Edit");
-				txtrDescription.setText("");
+				taDescription.setText("");
 				
 				
 			}
@@ -858,21 +897,21 @@ public class Whatschat {
 			public void actionPerformed(ActionEvent arg0) {
 				String buttonSelected = btnSubmitEdit.getText().toString();
 				if(buttonSelected.equalsIgnoreCase("Edit")){
-					txtrDescription.setEnabled(true);
+					taDescription.setEnabled(true);
 					btnCancel.setEnabled(true);
 					btnCancel.setVisible(true);
-					txtrDescription.setBorder(border);
+					taDescription.setBorder(border);
 					btnSubmitEdit.setText("Submit");
 				}
 				else if(buttonSelected.equalsIgnoreCase("Submit")){
-					txtrDescription.setEnabled(false);
-					txtrDescription.setBorder(null);
+					taDescription.setEnabled(false);
+					taDescription.setBorder(null);
 					btnCancel.setEnabled(false);
 					btnCancel.setVisible(false);	
 					btnSubmitEdit.setText("Edit");
 					
 					//User Part
-					currentUser.setDescription(txtrDescription.getText().toString());
+					currentUser.setDescription(taDescription.getText().toString());
 					
 				}
 				
@@ -972,22 +1011,26 @@ public class Whatschat {
 			//currentUser = new User();
 			lblProfilePicture.setIcon(scaledImage(currentUser.getProfilePicture(),lblProfilePicture,null));
 			lblUserId.setText("UserID: "+currentUser.getUsername());
-			txtrDescription.setText(currentUser.getDescription());
+			taDescription.setText(currentUser.getDescription());
 			btnSubmitEdit.setVisible(true);
 			btnSubmitEdit.setEnabled(true);
 			btnAttachButton.setEnabled(true);
 			btnAttachButton.setVisible(true);
+			btnBack.setEnabled(true);
+			btnBack.setVisible(true);
 			
 
 		}
 		else if(currentPage==2){
 			lblProfilePicture.setIcon(scaledImage(selectedProfile.getProfilePicture(),lblProfilePicture,null));
 			lblUserId.setText("UserID: "+selectedProfile.getUsername());
-			txtrDescription.setText(selectedProfile.getDescription());	
+			taDescription.setText(selectedProfile.getDescription());	
 			btnSubmitEdit.setVisible(false);
 			btnSubmitEdit.setEnabled(false);
 			btnAttachButton.setEnabled(false);
 			btnAttachButton.setVisible(false);
+			btnBack.setEnabled(true);
+			btnBack.setVisible(true);
 		}
 		System.out.println("CurrentPAge:"+currentPage);
 	}
