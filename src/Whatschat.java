@@ -92,6 +92,11 @@ public class Whatschat {
 	ArrayList<String> users;
 	JPanel whatschatHomePanel,whatsChatProfilePanel;
 	private JTextField tfUserId; 
+	
+	// ===============Phoebe==============
+	String oldGroupName = "";
+	//====================================
+	
 	//===============Common function==================
 	
 	//Common Function
@@ -603,6 +608,13 @@ public class Whatschat {
 		btnAdd.setBounds(12, 170, 97, 25);
 		onlineUsersPanel.add(btnAdd);
 		
+		btnAdd.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// getSelectedIndices = returns array
+				addMember(onlineUserlist.getSelectedValuesList());
+			}
+		});
+		
 		btnViewProfile = new JButton("View Profile");
 		btnViewProfile.setBackground(buttonColor);
 		btnViewProfile.setBorder(null);
@@ -672,6 +684,9 @@ public class Whatschat {
 					txtTitle.setBorder(border);
 					txtTitle.setForeground(Color.BLACK);
 					txtTitle.setBackground(Color.WHITE);
+					
+					oldGroupName = txtTitle.getText().toString();
+					
 					btnEdit.setText("Done");
 					
 				}
@@ -680,6 +695,9 @@ public class Whatschat {
 					txtTitle.setEnabled(false);
 					txtTitle.setBorder(null);
 					txtTitle.setForeground(Color.WHITE);
+					
+					editGroupName(txtTitle.getText().toString());
+					
 					btnEdit.setText("Edit");
 				}
 				
@@ -917,4 +935,98 @@ public class Whatschat {
 		    }
 			
 		}
+		
+	// Edit Group Name
+	public void editGroupName(String newGroupName) {
+		try {
+			
+			// To loop through the hash map 
+			for (Entry<String, ArrayList> m : userHashMap.entrySet()) {
+				String key = m.getKey();
+				ArrayList<String> value = m.getValue();
+				
+				// Check if group name is the same
+				if (!oldGroupName.matches(newGroupName)) {
+					// Changes made for group name
+					if (!m.getKey().matches(newGroupName)) {
+						userHashMap.put(newGroupName, (ArrayList<String>) m.getValue());
+						userHashMap.remove(oldGroupName);
+
+						String msg = "Group name changed to " + newGroupName;
+						byte[] buf = msg.getBytes();
+						DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+						multicastSocket.send(dgpSend);
+						taConverstaion.append(msg + "\n");
+					
+					}
+				}
+			}
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+	
+	// Add Member
+	public void addMember(List list) {
+		try {
+			System.out.println("before list ");
+			
+			userHashMap.put("ICT2107", new ArrayList<String>());
+			userHashMap.get("ICT2107").add("a");
+			
+			System.out.println("after list");
+			
+			System.out.println(list);
+			
+			// Loop through userHashMap
+			for (Entry<String, ArrayList> m : userHashMap.entrySet()) {
+				
+				System.out.println("in loop");
+				
+				// Reach the correct group chat 
+				if (txtTitle.getText().toString().equals(m.getKey())){
+					int p = 0;
+					userHashMap.put(m.getKey(), new ArrayList<String>());
+					userHashMap.get(m.getKey()).add(list.get(p));
+					
+					System.out.println( list.get(p) + " is added ");
+					
+					String msg = list.get(p) + " is added ";
+					byte[] buf = msg.getBytes();
+					DatagramPacket dgpConnected = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+					multicastSocket.send(dgpConnected);
+					
+					p++;
+				}
+				
+				System.out.println("tired ");
+
+				// Create a new thread to keep listening for packets from the group
+				new Thread(new Runnable() {
+					@Override
+					public void run() {
+						byte buf1[] = new byte[1000];
+						DatagramPacket dgpReceived = new DatagramPacket(buf1, buf1.length);
+						while (true) {
+							try {
+								multicastSocket.receive(dgpReceived);
+								byte[] receivedData = dgpReceived.getData();
+								int length = dgpReceived.getLength();
+
+								// Assume we received string
+								String msg = new String(receivedData, 0, length);
+								taConverstaion.append(msg + "\n");
+							} catch (IOException ex) {
+								ex.printStackTrace();
+							}
+						}
+					}
+				}).start();
+				
+			}
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
 }
