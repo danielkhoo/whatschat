@@ -53,17 +53,16 @@ public class Whatschat {
 	private JList memberList,onlineUserlist,groupsList;
 	private JTextArea taConverstaion,taComment;
 	private JButton btnRemove,btnSend,btnAdd,btnViewProfile,btnCreate,btnLeave,btnEdit;
-	private JTextField txtTitle; //Groupchat
+	private JTextField txtTitle; 
 	
 	//Profile Variable
 	private JLabel lblProfilePicture,lblimgSrc,lblUserId;
-	private JButton btnNewButton,btnAttachButton,btnSubmitEdit,btnCancel;
+	private JButton btnAttachButton,btnSubmitEdit,btnCancel;
 	private JTextArea txtrDescription;
 	private JFileChooser chooser;
 	private ImageIcon ii;
 	private ArrayList<User> userList;
 	private User currentUser, selectedProfile;
-	private boolean firstTimer;
 	int currentPage = 1 ;// 1 is userprofile , 2 ischat
 	
 	//===============daniel==============11
@@ -88,17 +87,15 @@ public class Whatschat {
 	//===============Joey==============
 	private boolean userAvail;
 	private String myID = "", PID;
-	
 	MulticastSocket userMulticastSocket = null;
 	InetAddress userMulticastGroup = null;
 	ArrayList<String> users;
 	JPanel whatschatHomePanel,whatsChatProfilePanel;
 	private JTextField tfUserId; 
-	//=================================
+	//===============Common function==================
 	
 	//Common Function
 	private JFrame frame;
-	
 	private Border border;
 	private Color primaryColor,selectedColor,buttonColor, headerColor;
 
@@ -128,7 +125,6 @@ public class Whatschat {
 		PID = ManagementFactory.getRuntimeMXBean().getName();//Track process ID for each application
 		users = new ArrayList<String>();//Instantiate list of online users
 		userList = new ArrayList<User>();//Instantiate list of online users
-		firstTimer = true;
 		
 		//Create multicast address 
 		try {
@@ -164,10 +160,11 @@ public class Whatschat {
 							datagramHandler(pkt);
 							System.out.println("Recieved String");
 						}
-						else if(recievedDataObject instanceof ArrayList<?>){
+						if(recievedDataObject instanceof ArrayList<?>){
 							userList=(ArrayList<User>) convertBytesToObject(receivedData,length);
 							System.out.println("Recieved Array: "+userList.size());
 						}
+						
 						
 					} catch (IOException ex) {
 						ex.printStackTrace();
@@ -252,10 +249,17 @@ public class Whatschat {
 					try {
 						userAvail = true;
 						String checkPkt = "CU:" + tfUserId.getText().trim() + ":" + PID;
-						System.out.println(checkPkt);
+						System.out.println("btnRegister: "+checkPkt);
+						
+						//RegisterationSide
 						byte[] buf = checkPkt.getBytes();
 						DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
 						userMulticastSocket.send(dgpCheckUser);
+						
+						//Profile Side -YH
+						byte[] buf2 = convertObjectToBytes(userList);
+						DatagramPacket dgpUserList = new DatagramPacket(buf2, buf.length, userMulticastGroup, 6789);
+						userMulticastSocket.send(dgpUserList);
 
 						TimeUnit.MILLISECONDS.sleep(1000);
 
@@ -320,6 +324,7 @@ public class Whatschat {
 						if(!users.contains(packet[1])){
 							//Add ID into arraylist if it does not exists
 							users.add(packet[1]);
+							userList.add(new User(packet[1])); //yh
 							listModelUsers.addElement(packet[1]);//daniel
 						}
 						//Sends a reply to let new user know of your current ID
@@ -344,6 +349,7 @@ public class Whatschat {
 					for(int i=0;i<users.size();i++){
 						if(users.get(i).equals(packet[1])){
 							users.remove(i);
+							userList.remove(new User(packet[1]));
 							listModelUsers.removeElement(packet[1]);//daniel
 						}
 					}
@@ -353,6 +359,7 @@ public class Whatschat {
 					//Adds userID into arraylist if it does not exist in arraylist
 					if(!(users.contains(packet[1]))){
 						users.add(packet[1]);
+						userList.add(new User(packet[1]));//yh
 						listModelUsers.addElement(packet[1]);//daniel
 					}
 				}
@@ -471,19 +478,15 @@ public class Whatschat {
 			public void mouseClicked(MouseEvent e) {
 //				userProfile();
 //				groupChat();
+				
 				//ArrayList Part
-				if(firstTimer){
-					userList.add(currentUser);
-					firstTimer=false;
-				}
-				else{
-					for(User u: userList){
-						if(u.getUsername().equalsIgnoreCase(currentUser.getUsername())){
-							u.setDescription(currentUser.getDescription());
-							u.setProfilePicture(currentUser.getProfilePicture());		
-						}
+				for(User u: userList){
+					if(u.getUsername().equalsIgnoreCase(currentUser.getUsername())){
+						u.setDescription(currentUser.getDescription());
+						u.setProfilePicture(currentUser.getProfilePicture());		
 					}
 				}
+				
 				
 				//Network Part
 				profileSendRequest();
@@ -910,7 +913,6 @@ public class Whatschat {
 		    	return in.readObject();
 		    }catch(Exception e){
 		    	String a = new String(bytes, 0, size);
-		    	System.out.println("aa_"+a);
 		    	return a;
 		    }
 			
