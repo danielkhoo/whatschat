@@ -45,11 +45,14 @@ import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.ListSelectionModel;
 import javax.swing.JPanel;
 import javax.swing.ScrollPaneConstants;
 import javax.swing.SwingConstants;
 import javax.swing.WindowConstants;
 import javax.swing.border.Border;
+import javax.swing.event.ListSelectionEvent;
+import javax.swing.event.ListSelectionListener;
 import javax.swing.plaf.basic.BasicScrollPaneUI.HSBChangeListener;
 
 
@@ -665,8 +668,22 @@ public class Whatschat {
 		btnLeave.setBounds(230, 176, 97, 25);
 		groupPanel.add(btnLeave);
 		
-		groupsList = new JList();
+		groupsList = new JList(listModelGroups);
 		groupsList.setBounds(12, 24, 326, 139);
+		groupsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
+		groupsList.addListSelectionListener(new ListSelectionListener() {
+		    @Override
+		    public void valueChanged(ListSelectionEvent e)
+		    {
+		        if(!e.getValueIsAdjusting()) {
+		        		activeGroupName = groupsList.getSelectedValue().toString();
+		        		txtTitle.setText(activeGroupName); 
+		        		taConverstaion.setText(messageHashMap.get(activeGroupName));//Update textArea
+		        }
+		        
+		        
+		    }
+		}); 
 		groupPanel.add(groupsList);
 		
 		groupTitlePanel = new JPanel();
@@ -758,9 +775,13 @@ public class Whatschat {
 				System.out.println("SEND");
 				
 				String msg = taComment.getText().toString();	
-				System.out.println(msg);
-				msg = activeGroupName+":"+username+ ": " + msg;
-				sendBroadcast(msg, multicastGroup, multicastSocket, 6789);
+				if(!msg.equalsIgnoreCase("")) {
+					taComment.setText("");
+					System.out.println(msg);
+					msg = activeGroupName+":"+username+ ": " + msg;
+					sendBroadcast(msg, multicastGroup, multicastSocket, 6789);
+				}
+				
 			}
 		});
 		
@@ -1299,8 +1320,8 @@ public class Whatschat {
 				activeGroupName = groupName; //Set active group
 				
 				//Update GROUPS to show ACTIVE
-				//listModelGroups.insertElementAt(groupName, listModelGroups.getSize());
-				//listGroups.setSelectedIndex(listModelGroups.getSize()-1);
+				listModelGroups.insertElementAt(groupName, listModelGroups.getSize());
+				groupsList.setSelectedIndex(listModelGroups.getSize()-1);
 				
 				//Send a joined message
 				//String message = activeGroupName+":"+username + " joined";
@@ -1423,6 +1444,12 @@ public class Whatschat {
 										else if (data[0].equals("JOIN")) {
 											if(data[1].equals(username)) {
 												System.out.println(username +"join "+data[2]);
+												//Add delay
+												try {
+													Thread.sleep(500);
+												} catch (InterruptedException e1) {
+													e1.printStackTrace();
+												}
 												joinChatGroup(data[2]);
 											}
 										}
