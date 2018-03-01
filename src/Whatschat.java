@@ -1185,6 +1185,69 @@ public class Whatschat {
 		}
 	}
 	
+	// Delete Member
+	public void deleteMember(List selectedList) {
+
+		try {
+			// Loop through Hashmap
+			for (Map.Entry<String, ArrayList> m : userHashMap.entrySet()) {
+				// Compare the key and group ID
+				if (txtTitle.getText().toString().equals(m.getKey())) {
+					// If true...
+					ArrayList<String> value = m.getValue();
+
+					// Loop through the Hashmap array list
+					for (String aString : value) {
+						// Same = can remove
+						if (aString.equals(selectedList)) {
+							// Remove from Hashmap array list
+							value.remove(aString);
+
+							String msg = aString + " is being removed ";
+							byte[] buf = msg.getBytes();
+							DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+							multicastSocket.send(dgpSend);
+							multicastSocket.leaveGroup(multicastGroup);
+						}
+
+					}
+				}
+			}
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	// Leave Group
+	public void leaveGroup(String userName) {
+		try {
+
+			for (Map.Entry<String, ArrayList> m : userHashMap.entrySet()) {
+				// Compare the key and group ID
+				if (txtTitle.getText().toString().equals(m.getKey())) {
+					ArrayList<String> value = m.getValue();
+					// loop through value in Hashmap
+					for (String arrayUserName : value) {
+						if (userName.equals(arrayUserName)) {
+							userList.remove(userName);
+
+							String msg = userName + ": is leaving the group chat";
+							byte[] buf = msg.getBytes();
+							DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+							multicastSocket.send(dgpSend);
+							multicastSocket.leaveGroup(multicastGroup);
+						}
+					}
+				}
+			}
+
+		} catch (IOException ex) {
+			ex.printStackTrace();
+		}
+	}
+
+	
 	//====================================daniel======================================
 	private static void sendBroadcast(String message, InetAddress address, MulticastSocket socket,int port) {
 		try {
