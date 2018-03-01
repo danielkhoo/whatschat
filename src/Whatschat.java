@@ -113,6 +113,7 @@ public class Whatschat {
 	
 	// ===============Phoebe==============
 	String oldGroupName = "";
+	private DefaultListModel<String> groupMember = new DefaultListModel();
 	//====================================
 	
 	//===============Common function==================
@@ -593,10 +594,14 @@ public class Whatschat {
 		mainChatPanel.add(lblMembers);
 		lblMembers.setFont(new Font("Bookman Old Style", Font.BOLD, 18));
 		
-		memberList = new JList();
-		memberList.setBounds(542, 42, 191, 266);
-		mainChatPanel.add(memberList);
-		memberList.setBorder(border);
+		// Phoebe--------------------------------------------------------
+        groupMember.addElement("userA");
+        groupMember.addElement("userB");
+        groupMember.addElement("userC");
+        memberList = new JList(groupMember);
+        memberList.setBounds(542, 42, 191, 266);
+        mainChatPanel.add(memberList);
+        memberList.setBorder(border);
 		
 		
 		//textarea and conversation
@@ -785,6 +790,7 @@ public class Whatschat {
 					ArrayList<String> localArrayList = new ArrayList<String>();
 					localArrayList.add(myID);
 					
+					groupMember.clear();
 					// get each user in the list and send them join command
 					int selected[]= onlineUserlist.getSelectedIndices();
 					for(int i=0; i<selected.length;i++) {
@@ -795,9 +801,16 @@ public class Whatschat {
 						//Add to arrayList
 						localArrayList.add(listModelUsers.getElementAt(selected[i]));
 						
+						//Update members
+						
+						 groupMember.addElement(listModelUsers.getElementAt(selected[i]));
+						
 					}
 					
 					userHashMap.put(groupName, localArrayList);
+					
+					//Add self to ui memberlist
+					groupMember.addElement(username);
 				}
 				
 			}
@@ -813,6 +826,18 @@ public class Whatschat {
 					System.out.println(msg);
 					msg = activeGroupName+":"+username+ ": " + msg;
 					sendBroadcast(msg, multicastGroup, multicastSocket, 6789);
+				}
+				
+				System.out.println("refresh the list in " + username);
+				
+				
+				if(userHashMap.get(txtTitle.getText().toString())!=null){
+					ArrayList<String> localArrayList = userHashMap.get(txtTitle.getText().toString());
+					groupMember.clear();
+					for (String item : localArrayList) {
+						System.out.println(item);
+						groupMember.addElement(item);
+					}
 				}
 				
 			}
@@ -833,18 +858,18 @@ public class Whatschat {
 		});
 		
 		btnAdd.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// getSelectedIndices = returns array
-				addMember(onlineUserlist.getSelectedValuesList());
-			}
-		});
-		
-		btnRemove.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				// getSelectedIndices = returns array
-				deleteMember(memberList.getSelectedValuesList());
-			}
-		});
+            public void actionPerformed(ActionEvent e) {
+                // getSelectedIndices = returns array
+                addMember(onlineUserlist.getSelectedValuesList());
+            }
+        });
+ 
+        btnRemove.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                // getSelectedIndices = returns array
+                deleteMember(memberList.getSelectedValuesList());
+            }
+        });
 		
 		btnLeave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
@@ -1171,6 +1196,8 @@ public class Whatschat {
 			
 		}
 		
+	//--------------------------------------Phoebe-------------------------------
+	 
 	// Edit Group Name
 	public void editGroupName(String newGroupName) {
 		try {
@@ -1202,109 +1229,80 @@ public class Whatschat {
 	}
 
 	
-	//--------------------------------------Phone-------------------------------
-	// Add Member
-	public void addMember(List list) {
-		try {
-			System.out.println("before list ");
-			
-			userHashMap.put("ICT2107", new ArrayList<String>());
-			userHashMap.get("ICT2107").add("a");
-			
-			System.out.println("after list");
-			
-			System.out.println(list);
-			
-			// Loop through userHashMap
-			for (Entry<String, ArrayList> m : userHashMap.entrySet()) {
-				
-				System.out.println("in loop");
-				
-				// Reach the correct group chat 
-				if (txtTitle.getText().toString().equals(m.getKey())){
-					int p = 0;
-					userHashMap.put(m.getKey(), new ArrayList<String>());
-					userHashMap.get(m.getKey()).add(list.get(p));
-					
-					System.out.println( list.get(p) + " is added ");
-					
-					String msg = list.get(p) + " is added ";
-					byte[] buf = msg.getBytes();
-					DatagramPacket dgpConnected = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-					multicastSocket.send(dgpConnected);
-					
-					p++;
-				}
-				
-				System.out.println("tired ");
-
-				// Create a new thread to keep listening for packets from the group
-				new Thread(new Runnable() {
-					@Override
-					public void run() {
-						byte buf1[] = new byte[1000];
-						DatagramPacket dgpReceived = new DatagramPacket(buf1, buf1.length);
-						while (true) {
-							try {
-								multicastSocket.receive(dgpReceived);
-								byte[] receivedData = dgpReceived.getData();
-								int length = dgpReceived.getLength();
-
-								// Assume we received string
-								String msg = new String(receivedData, 0, length);
-								taConverstaion.append(msg + "\n");
-							} catch (IOException ex) {
-								ex.printStackTrace();
-							}
-						}
-					}
-				}).start();
-				
-			}
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
 	
-	// Delete Member
-	public void deleteMember(List selectedList) {
-
-		try {
-			// Loop through Hashmap
-			for (Map.Entry<String, ArrayList> m : userHashMap.entrySet()) {
-				// Compare the key and group ID
-				if (txtTitle.getText().toString().equals(m.getKey())) {
-					// If true...
-					ArrayList<String> value = m.getValue();
-
-					// Loop through the Hashmap array list
-					for (String aString : value) {
-						// Same = can remove
-						if (aString.equals(selectedList)) {
-							// Remove from Hashmap array list
-							value.remove(aString);
-
-							String msg = aString + " is being removed ";
-							byte[] buf = msg.getBytes();
-							DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-							multicastSocket.send(dgpSend);
-							multicastSocket.leaveGroup(multicastGroup);
-						}
-
-					}
-				}
+	// Add Member
+    public void addMember(List list) {
+    	
+    		String groupName = txtTitle.getText().toString();
+    		ArrayList<String> localArrayList = userHashMap.get(groupName);
+    		
+    		
+    		for (int p = 0; p < list.size(); p++) {
+    			//Send JOIN command to all selected users
+    			String msg = "JOIN:"+list.get(p).toString()+":"+groupName;
+				sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+				
+				
+				
+				//Add to arrayList
+				localArrayList.add(list.get(p).toString());
+				
+				//Add to uilist
+				groupMember.addElement(list.get(p).toString());
+            }
+			userHashMap.put(groupName, localArrayList);
+			
+			
+			String serial = serializeArray(localArrayList.toArray(new String[localArrayList.size()]));//serialize the arraylist
+			
+			//Send UPDATEMEMBER command to give everyone the latest userHashMap
+			for (String item : localArrayList) {
+    			String msg = "UPDATEMEMBER:"+username+":"+groupName+":"+serial;
+				sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
 			}
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
-	}
+			
+			
+    		
+    }
+	
+    // Delete Member
+    public void deleteMember(List list) {
+ 
+        try {
+ 
+            System.out.println("DELETE");
+ 
+            userHashMap.put("ICT2107", new ArrayList<String>());
+            userHashMap.get("ICT2107").add("a");
+ 
+            for (int p = 0; p < list.size(); p++) {
+ 
+                userHashMap.put(activeGroupName, new ArrayList<String>());
+                userHashMap.get(activeGroupName).add(list.get(p));
+ 
+                String msg = list.get(p) + " is removed ";
+                byte[] buf = msg.getBytes();
+                DatagramPacket dgpConnected = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
+                multicastSocket.send(dgpConnected);
+                groupMember.removeElement((String) list.get(p));
+ 
+            }
+ 
+        } catch (IOException ex) {
+            ex.printStackTrace();
+        }
+    }
 
 	// Leave Group
 	public void leaveGroup(String userName) {
 		try {
+			
+			userHashMap.put("ICT2107", new ArrayList<String>());
+            userHashMap.get("ICT2107").add("a");
 
+            String currentGroupName = txtTitle.getText().toString(); 
+            System.out.println("test");
+            
 			for (Map.Entry<String, ArrayList> m : userHashMap.entrySet()) {
 				// Compare the key and group ID
 				if (txtTitle.getText().toString().equals(m.getKey())) {
@@ -1380,7 +1378,6 @@ public class Whatschat {
 				//sendBroadcast(message,multicastGroup,multicastSocket,6789);
 				String msg1 = "GETMESSAGE:"+activeGroupName+":"+username + ":joined";		
 				sendBroadcast(msg1, multicastGroup, multicastSocket, 6789);
-				
 				
 				
 				//Create a new thread to for messages within a group
@@ -1492,7 +1489,22 @@ public class Whatschat {
 												String groupIP = "SET:"+data[1]+":"+groupHashMap.get(data[1]);
 												sendBroadcast(groupIP, defaultGroup, defaultSocket, 6789);
 											}
-										}	
+										}
+										//=====================================NEW USERHASHMAP GET/SET ===============================
+										else if (data[0].equals("UPDATEMEMBER")){
+											System.out.println("UPDATEMEMBER");
+											if(!data[1].equals(username)) {
+												String serial = data[3];
+												String[] deserialized = deserializeArray(serial);
+												//Update UI
+												groupMember.clear();
+												for (String item : deserialized) {
+												    System.out.println(item);
+												    groupMember.addElement(item);
+												}
+											}
+										}
+										
 										else if (data[0].equals("JOIN")) {
 											if(data[1].equals(username)) {
 												System.out.println(username +"join "+data[2]);
@@ -1504,6 +1516,9 @@ public class Whatschat {
 												}
 												
 												joinChatGroup(data[2]);
+												
+												//TEST!	
+												
 											}
 										}
 										
