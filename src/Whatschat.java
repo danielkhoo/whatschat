@@ -1,3 +1,4 @@
+
 import java.awt.Color;
 import java.awt.EventQueue;
 import java.awt.Font;
@@ -183,8 +184,21 @@ public class Whatschat {
 							datagramHandler(pkt);
 							System.out.println("Recieved String");
 						}
-						else if(recievedDataObject instanceof ArrayList<?>){
+						if(recievedDataObject instanceof ArrayList<?>){
 							userList=(ArrayList<User>) convertBytesToObject(receivedData,length);
+							int x = 0;
+							System.out.println("=========Latest==============");
+							for(User u : userList){
+								
+								System.out.println(x+":"+ u.getProfilePicture());
+								System.out.println(x+":"+ u.getDescription());
+								System.out.println(x+":"+ u.getUsername());
+								x+=1;
+								System.out.println("");
+								
+							}
+							System.out.println("=======================");
+							
 							System.out.println("Recieved Array: "+userList.size());
 						}
 						else if(recievedDataObject instanceof User){
@@ -289,10 +303,14 @@ public class Whatschat {
 
 
 						TimeUnit.MILLISECONDS.sleep(1000);
+						
 						//Profile Side -YH
+						for(User u :userList){
+							System.out.println("btnRegister:"+u.getUsername()+u.getDescription());
+						}
 						userList.add(new User(tfUserId.getText().trim()));
 						byte[] buf2 = convertObjectToBytes(userList);
-						DatagramPacket dgpUserList = new DatagramPacket(buf2, buf.length, userMulticastGroup, 6789);
+						DatagramPacket dgpUserList = new DatagramPacket(buf2, buf2.length, userMulticastGroup, 6789);
 						userMulticastSocket.send(dgpUserList);
 						TimeUnit.MILLISECONDS.sleep(1000);
 
@@ -344,7 +362,7 @@ public class Whatschat {
 		//GU - Get Users
 		//UR - User Reply
 		//UL - User Leave
-		System.out.println(packet[0]);
+		System.out.println("Datagramhandler: "+packet[0]);
 		try{  
 			if (packet[0].equals("CU")) {
 				if (!(myID.equals(""))) {
@@ -522,30 +540,36 @@ public class Whatschat {
 		lblGroupChat.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-//				userProfile();
-//				groupChat();
-				
+
 				//ArrayList Part
-
 					int q=0;
-					for(int u =0; u<userList.size();u++){
-						if(userList.get(u).getUsername().equalsIgnoreCase(currentUser.getUsername())){
-							userList.get(u).setDescription(currentUser.getDescription());
-							userList.get(u).setProfilePicture(currentUser.getProfilePicture());	
-							q=u;
-						}
-					}
-					System.out.println("SelectGroupChat:"+userList.get(q).getDescription());
-					System.out.println("SelectGroupChat:"+userList.get(q).getProfilePicture());
-					
-					
-					System.out.println("firstTime:False");
-				
-
-				
-				
 				//Network Part
-				profileSendRequest();
+				//profileSendRequest();
+					try {
+						
+						
+						for(int u =0; u<userList.size();u++){
+							if(userList.get(u).getUsername().equalsIgnoreCase(currentUser.getUsername())){
+								userList.get(u).setDescription(currentUser.getDescription());
+								userList.get(u).setProfilePicture(currentUser.getProfilePicture());	
+								System.out.println("Same Name!?");
+								q=u;
+							}
+						}
+						System.out.println("SelectGroupChat:"+userList.get(q).getDescription());
+						System.out.println("SelectGroupChat:"+userList.get(q).getProfilePicture());
+						
+						byte[] buf = convertObjectToBytes(userList);
+						DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+						userMulticastSocket.send(dgpCheckUser);
+						TimeUnit.MILLISECONDS.sleep(1000);
+					} catch (IOException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					} catch (InterruptedException e1) {
+						// TODO Auto-generated catch block
+						e1.printStackTrace();
+					}
 
 				//Interface part
 				System.out.println("Groupchat clicked");
