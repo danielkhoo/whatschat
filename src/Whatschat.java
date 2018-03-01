@@ -152,8 +152,7 @@ public class Whatschat {
 			userMulticastSocket = new MulticastSocket(6789);
 			userMulticastSocket.joinGroup(userMulticastGroup);
 			
-			//daniel
-			multicastSocket = new MulticastSocket(6789);
+			
 		} catch (IOException ex) {
 			ex.printStackTrace();
 		}
@@ -762,7 +761,7 @@ public class Whatschat {
 					// get each user in the list and send them join command
 					int selected[]= onlineUserlist.getSelectedIndices();
 					for(int i=0; i<selected.length;i++) {
-						String msg = "JOIN:"+listModelUsers.getElementAt(selected[i])+":group1";
+						String msg = "JOIN:"+listModelUsers.getElementAt(selected[i])+":"+txtNewGroupName.getText().trim();
 						sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
 					}
 				}
@@ -1316,6 +1315,10 @@ public class Whatschat {
 				System.out.println("Room does not exist");
 			} else {
 				multicastGroup = InetAddress.getByName(groupHashMap.get(groupName) );
+				System.out.println("name:"+groupName);
+				System.out.println(groupHashMap.get("group1"));
+				System.out.println(groupHashMap.get("group2"));
+				
 				multicastSocket.joinGroup(multicastGroup);
 				activeGroupName = groupName; //Set active group
 				
