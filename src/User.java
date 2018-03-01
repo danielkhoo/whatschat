@@ -1,3 +1,5 @@
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayOutputStream;
 import java.io.Serializable;
 import java.util.HashMap;
 
@@ -6,6 +8,8 @@ public class User implements Serializable {
 	String username;
 	String profilePicture;
 	String description;
+	BufferedImage displayPicture;
+	//https://stackoverflow.com/questions/26571640/how-to-transfer-jpg-image-using-udp-socket
 	
 	
 
