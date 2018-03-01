@@ -711,9 +711,13 @@ public class Whatschat {
 		    public void valueChanged(ListSelectionEvent e)
 		    {
 		        if(!e.getValueIsAdjusting()) {
-		        		activeGroupName = groupsList.getSelectedValue().toString();
-		        		txtTitle.setText(activeGroupName); 
-		        		taConverstaion.setText(messageHashMap.get(activeGroupName));//Update textArea
+		        		if(!listModelGroups.isEmpty() && !groupsList.isSelectionEmpty()){
+		        			
+		        			activeGroupName = groupsList.getSelectedValue().toString();
+			        		txtTitle.setText(activeGroupName); 
+			        		taConverstaion.setText(messageHashMap.get(activeGroupName));//Update textArea
+		        		}
+		        		
 		        }
 		        
 		        
@@ -882,7 +886,7 @@ public class Whatschat {
 		btnLeave.addActionListener(new ActionListener() {
 			public void actionPerformed(ActionEvent e) {
 				// getSelectedIndices = returns array
-				leaveGroup("user1");
+				leaveGroup(username, activeGroupName);
 			}
 		});
 		
@@ -1302,36 +1306,37 @@ public class Whatschat {
     }
 
 	// Leave Group
-	public void leaveGroup(String userName) {
+	public void leaveGroup(String userName, String group) {
+		//Update the userHashMap to remove self
+		ArrayList<String> localArrayList = userHashMap.get(group);
+		localArrayList.remove(userName);
+		userHashMap.put(group, localArrayList);
+		
+		String serial = serializeArray(localArrayList.toArray(new String[localArrayList.size()]));//serialize the arraylist
+		
+		//Send UPDATEMEMBER command to give everyone the latest userHashMap
+		for (String item : localArrayList) {
+			String msg = "UPDATEMEMBER:"+username+":"+group+":"+serial;
+			sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+		}
+		
+		//leave group ip
 		try {
+			InetAddress groupAddress = InetAddress.getByName(groupHashMap.get(group));
+			String msg = username + ": is leaving";
+			sendBroadcast(msg,groupAddress,multicastSocket,6789);
+			multicastSocket.leaveGroup(groupAddress);}
+		
+		catch(IOException ex){
 			
-			userHashMap.put("ICT2107", new ArrayList<String>());
-            userHashMap.get("ICT2107").add("a");
-
-            String currentGroupName = txtTitle.getText().toString(); 
-            System.out.println("test");
-            
-			for (Map.Entry<String, ArrayList> m : userHashMap.entrySet()) {
-				// Compare the key and group ID
-				if (txtTitle.getText().toString().equals(m.getKey())) {
-					ArrayList<String> value = m.getValue();
-					// loop through value in Hashmap
-					for (String arrayUserName : value) {
-						if (userName.equals(arrayUserName)) {
-							userList.remove(userName);
-
-							String msg = userName + ": is leaving the group chat";
-							byte[] buf = msg.getBytes();
-							DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-							multicastSocket.send(dgpSend);
-							multicastSocket.leaveGroup(multicastGroup);
-						}
-					}
-				}
-			}
-
-		} catch (IOException ex) {
-			ex.printStackTrace();
+		}
+		
+		//Update local UI
+		groupMember.clear();
+		listModelGroups.removeElement(group);
+		txtTitle.setText("");
+		if(!listModelGroups.isEmpty()){
+			groupsList.setSelectedIndex(0);
 		}
 	}
 
@@ -1512,7 +1517,9 @@ public class Whatschat {
 												}
 											}
 										}
-										
+										else if (data[0].equals("LEAVE")) {
+											
+										}
 										else if (data[0].equals("JOIN")) {
 											if(data[1].equals(username)) {
 												System.out.println(username +"join "+data[2]);
