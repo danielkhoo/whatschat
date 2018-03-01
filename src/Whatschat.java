@@ -94,12 +94,13 @@ public class Whatschat {
 	volatile Map<String, String> groupHashMap = new HashMap<String,String>(); //GroupName:IP
 	volatile Map<String, String> messageHashMap = new HashMap<String,String>(); // GroupName:Messages
 	volatile Map<String, ArrayList> userHashMap = new HashMap<String,ArrayList>(); // GroupName:Users
+	
 	//volatile Map<String, Integer> onlineHashMap = new HashMap<String,Integer>(); // GroupName:Users
 	private String username;
 	private String activeGroupName;
 	
-	private DefaultListModel<String> listModelGroups = new DefaultListModel();;
-	private DefaultListModel<String> listModelUsers = new DefaultListModel();;
+	private DefaultListModel<String> listModelGroups = new DefaultListModel();
+	private DefaultListModel<String> listModelUsers = new DefaultListModel();
 	//==============daniel==============
 	
 	//===============Joey==============
@@ -580,7 +581,7 @@ public class Whatschat {
 		mainChatPanel.setLayout(null);
 		
 		JButton btnRemove = new JButton("Remove");
-		btnRemove.setBounds(596, 265, 102, 29);
+		btnRemove.setBounds(592, 272, 102, 29);
 		mainChatPanel.add(btnRemove);
 		btnRemove.setBackground(buttonColor);
 		btnRemove.setBorder(null);
@@ -593,10 +594,13 @@ public class Whatschat {
 		mainChatPanel.add(lblMembers);
 		lblMembers.setFont(new Font("Bookman Old Style", Font.BOLD, 18));
 		
+		JScrollPane scrollPaneMember = new JScrollPane();
+		scrollPaneMember.setBounds(542, 42, 190, 225);
+		mainChatPanel.add(scrollPaneMember);
 		memberList = new JList();
-		memberList.setBounds(542, 42, 191, 266);
-		mainChatPanel.add(memberList);
+		scrollPaneMember.setViewportView(memberList);
 		memberList.setBorder(border);
+		
 		
 		
 		//textarea and conversation
@@ -645,9 +649,14 @@ public class Whatschat {
 		listModelUsers.addElement("user1");
 		listModelUsers.addElement("user2");
 		listModelUsers.addElement("user3");
+
+
+		
+		JScrollPane scrollPaneOnlineUsers = new JScrollPane();
+		scrollPaneOnlineUsers.setBounds(12, 27, 322, 130);
+		onlineUsersPanel.add(scrollPaneOnlineUsers);
 		onlineUserlist = new JList(listModelUsers);//daniel
-		onlineUserlist.setBounds(12, 20, 322, 116);//daniel
-		onlineUsersPanel.add(onlineUserlist);
+		scrollPaneOnlineUsers.setViewportView(onlineUserlist);
 		
 		btnAdd = new JButton("Add");
 		btnAdd.setBackground(buttonColor);
@@ -690,8 +699,11 @@ public class Whatschat {
 		btnLeave.setBounds(230, 176, 97, 25);
 		groupPanel.add(btnLeave);
 		
+		
+		JScrollPane scrollPaneGroups = new JScrollPane();
+		scrollPaneGroups.setBounds(12, 24, 326, 139);
+		groupPanel.add(scrollPaneGroups);
 		groupsList = new JList(listModelGroups);
-		groupsList.setBounds(12, 24, 326, 139);
 		groupsList.setSelectionMode(ListSelectionModel.SINGLE_SELECTION);
 		groupsList.addListSelectionListener(new ListSelectionListener() {
 		    @Override
@@ -706,7 +718,7 @@ public class Whatschat {
 		        
 		    }
 		}); 
-		groupPanel.add(groupsList);
+		scrollPaneGroups.setViewportView(groupsList);
 		
 		groupTitlePanel = new JPanel();
 		groupTitlePanel.setBounds(0, 0, 732, 59);
