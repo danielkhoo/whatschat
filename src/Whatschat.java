@@ -26,6 +26,7 @@ import java.net.DatagramPacket;
 import java.net.InetAddress;
 import java.net.MulticastSocket;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Base64;
 import java.util.HashMap;
 import java.util.List;
@@ -95,7 +96,6 @@ public class Whatschat {
 	volatile Map<String, String> messageHashMap = new HashMap<String,String>(); // GroupName:Messages
 	volatile Map<String, ArrayList> userHashMap = new HashMap<String,ArrayList>(); // GroupName:Users
 	
-	//volatile Map<String, Integer> onlineHashMap = new HashMap<String,Integer>(); // GroupName:Users
 	private String username;
 	private String activeGroupName;
 	
@@ -546,21 +546,28 @@ public class Whatschat {
 			}
 		});
 		
-		lblGroupChat.addMouseListener(new MouseAdapter() {
-			@Override
-			public void mouseClicked(MouseEvent e) {
-				//Arraylist and Network Part
-				profileSendRequest();
-				
-				//Interface part
-				System.out.println("Groupchat clicked");
-				whatsChatProfilePanel.setVisible(false);
-				whatschatGroupChat.setVisible(true);
-				
-				currentPage=2;
-				selectedPanel.setBounds(0, 240, 255, 59);
-			}
-		});
+		  lblGroupChat.addMouseListener(new MouseAdapter() {
+			   @Override
+			   public void mouseClicked(MouseEvent e) {
+			    if(firstTimer){
+			     ImageIcon image = new ImageIcon(".\\images\\tutorial.jpg");
+			     JOptionPane.showMessageDialog(new JFrame(),null, "Tutorial",JOptionPane.INFORMATION_MESSAGE,image); 
+			     
+			     
+			     firstTimer=false;
+			    }
+			    //Arraylist and Network Part
+			    profileSendRequest();
+			    
+			    //Interface part
+			    System.out.println("Groupchat clicked");
+			    whatsChatProfilePanel.setVisible(false);
+			    whatschatGroupChat.setVisible(true);
+			    
+			    currentPage=2;
+			    selectedPanel.setBounds(0, 240, 255, 59);
+			   }
+			  });
 		
 		
 	}
@@ -645,12 +652,6 @@ public class Whatschat {
 		onlineUsersPanel.setBackground(Color.WHITE);
 		onlineUsersPanel.setBorder(BorderFactory.createTitledBorder("Online Users"));
 		onlineUsersPanel.setLayout(null);
-		
-		
-		listModelUsers.addElement("user1");
-		listModelUsers.addElement("user2");
-		listModelUsers.addElement("user3");
-
 
 		
 		JScrollPane scrollPaneOnlineUsers = new JScrollPane();
@@ -770,6 +771,8 @@ public class Whatschat {
 					txtTitle.setBorder(null);
 					txtTitle.setForeground(Color.WHITE);
 					btnEdit.setText("Edit");
+					
+					editGroupName(activeGroupName, txtTitle.getText().toString());
 				}
 				
 			}
@@ -840,17 +843,8 @@ public class Whatschat {
 					sendBroadcast(msg, multicastGroup, multicastSocket, 6789);
 				}
 				
-				System.out.println("refresh the list in " + username);
 				
 				
-				if(userHashMap.get(txtTitle.getText().toString())!=null){
-					ArrayList<String> localArrayList = userHashMap.get(txtTitle.getText().toString());
-					groupMember.clear();
-					for (String item : localArrayList) {
-						System.out.println(item);
-						groupMember.addElement(item);
-					}
-				}
 				
 			}
 		});
@@ -893,267 +887,267 @@ public class Whatschat {
 		
 
 	}
-	//====================================user profile page======================================
-	private void userProfile(){
-		//Recive Request
-		//===============================Interface=================================================
-		whatsChatProfilePanel = new JPanel();
-		whatsChatProfilePanel.setBackground(Color.WHITE);
-		whatsChatProfilePanel.setBounds(249, 0, 733, 750);
-		frame.getContentPane().add(whatsChatProfilePanel);
-		whatsChatProfilePanel.setLayout(null);
-		
-		lblProfilePicture = new JLabel("");
-		lblProfilePicture.setBounds(54, 43, 165, 161);
-		whatsChatProfilePanel.add(lblProfilePicture);
-		
-		lblimgSrc = new JLabel("");
-		lblimgSrc.setBounds(12, 246, 399, 16);
-		whatsChatProfilePanel.add(lblimgSrc);
-		lblimgSrc.setForeground(Color.LIGHT_GRAY);
-			
-		btnAttachButton = new JButton("Attach");
-		btnAttachButton.setBounds(91, 214, 97, 25);
-		whatsChatProfilePanel.add(btnAttachButton);
-		btnAttachButton.setBackground(buttonColor);
-		btnAttachButton.setBorder(null);
-		btnAttachButton.setForeground(Color.WHITE);
-		lblUserId = new JLabel("");
-		lblUserId.setBounds(254, 45, 325, 44);
-		whatsChatProfilePanel.add(lblUserId);
-		lblUserId.setFont(new Font("Bookman Old Style", Font.BOLD, 16));
-		
-		
-		
-		
-		
-		//textarea
-		JScrollPane scrollPane = new JScrollPane();
-		scrollPane.setBounds(253, 92, 441, 113);
-		
-		taDescription = new JTextArea();
-		taDescription.setBorder(border);
-		taDescription.setDisabledTextColor(Color.BLACK);
-		taDescription.setEnabled(false);
-		taDescription.setLineWrap(true);
-		taDescription.setWrapStyleWord(true);
-		scrollPane.setViewportView(taDescription);
-		whatsChatProfilePanel.add(scrollPane);
-		
-		
-		btnSubmitEdit = new JButton("Edit");
-		btnSubmitEdit.setBounds(594, 212, 97, 25);
-		whatsChatProfilePanel.add(btnSubmitEdit);
-		btnSubmitEdit.setBackground(buttonColor);
-		btnSubmitEdit.setBorder(null);
-		btnSubmitEdit.setForeground(Color.WHITE);
-		btnSubmitEdit.setBackground(buttonColor);
-		btnSubmitEdit.setBorder(null);
-		btnSubmitEdit.setForeground(Color.WHITE);
-		
-		btnCancel = new JButton("Cancel");
-		btnCancel.setBackground(buttonColor);
-		btnCancel.setBorder(null);
-		btnCancel.setForeground(Color.WHITE);
-		
-		btnCancel.setBounds(480, 211, 97, 25);
-		whatsChatProfilePanel.add(btnCancel);
-		btnCancel.setEnabled(false);
-		btnCancel.setVisible(false);
-		
-		btnBack = new JButton("Back");
-		btnBack.setBounds(334, 439, 127, 44);
-		btnBack.setBackground(buttonColor);
-		btnBack.setForeground(Color.WHITE);
-		btnBack.setBorder(null);
-		btnBack.setVisible(false);
-		whatsChatProfilePanel.add(btnBack);
-		
-		//=================================Setting Page==============================================
-		reloadProfile();
-		
-		//================================Button Action==============================================
-		btnBack.addActionListener(new ActionListener() {
-			
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				System.out.println("Button Back");
-				whatsChatProfilePanel.setVisible(false);
-				whatschatGroupChat.setVisible(true);
-			}
-		});
-		btnCancel.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent e) {
-				taDescription.setEnabled(false);
-				taDescription.setBorder(null);
-				btnCancel.setEnabled(false);
-				btnCancel.setVisible(false);
-				btnSubmitEdit.setText("Edit");
-				taDescription.setText("");
-				
-				
-			}
-		});
-		
-		//Button action
-		btnSubmitEdit.addActionListener(new ActionListener() {
-			@Override
-			public void actionPerformed(ActionEvent arg0) {
-				String buttonSelected = btnSubmitEdit.getText().toString();
-				if(buttonSelected.equalsIgnoreCase("Edit")){
-					taDescription.setEnabled(true);
-					btnCancel.setEnabled(true);
-					btnCancel.setVisible(true);
-					taDescription.setBorder(border);
-					btnSubmitEdit.setText("Submit");
-				}
-				else if(buttonSelected.equalsIgnoreCase("Submit")){
-					taDescription.setEnabled(false);
-					taDescription.setBorder(null);
-					btnCancel.setEnabled(false);
-					btnCancel.setVisible(false);	
-					btnSubmitEdit.setText("Edit");
-					profileSendRequest();
-					
-					//User Part
-					currentUser.setDescription(taDescription.getText().toString());
-					
-				}
-				
-				
-			}
-		});
-		btnAttachButton.addActionListener(new ActionListener() {
-			public void actionPerformed(ActionEvent e) {
-				chooser = new JFileChooser();
-			    chooser.showOpenDialog(null);
-			    chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
-			    chooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
-			    //chooser.addChoosableFileFilter(new FileNameExtensionFilter("Image Files", ImageIO.getReaderFileSuffixes()));
-			    File f = chooser.getSelectedFile();
-			    String filename = f.getAbsolutePath();
-			    if(filename.endsWith(".jpg") || filename.endsWith(".png") ){
-				    try {
-				    	String fileName=currentUser.getUsername()+".png";
-				        ii=scaledImage(fileName, lblProfilePicture, ImageIO.read(new File(f.getAbsolutePath())));//get the image from file chooser and scale it to match JLabel size
-				        lblProfilePicture.setIcon(ii);
-				        lblimgSrc.setText(filename);
-				        lblimgSrc.setForeground(Color.gray);
-				        
-						//User Part
-				        profileSendRequest();
-						currentUser.setProfilePicture(fileName);
-						lblimgSrc.setText("");
-						
-						
-				       
-						
-				    } catch (Exception ex) {
-				    	lblimgSrc.setText("Incorrect File Source. Please Upload again.");
-				    	lblimgSrc.setForeground(Color.RED);
-				        ex.printStackTrace();
-				    }
-			    }
-			    else{
-			    	lblimgSrc.setText("Incorrect File Source. Please Upload again.");
-			    	lblimgSrc.setForeground(Color.RED);
-			    }
+	 //====================================user profile page======================================
+	 private void userProfile(){
+	  //Recive Request
+	  //===============================Interface=================================================
+	  whatsChatProfilePanel = new JPanel();
+	  whatsChatProfilePanel.setBackground(Color.WHITE);
+	  whatsChatProfilePanel.setBounds(249, 0, 733, 750);
+	  frame.getContentPane().add(whatsChatProfilePanel);
+	  whatsChatProfilePanel.setLayout(null);
+	  
+	  lblProfilePicture = new JLabel("");
+	  lblProfilePicture.setBounds(54, 43, 165, 161);
+	  whatsChatProfilePanel.add(lblProfilePicture);
+	  
+	  lblimgSrc = new JLabel("");
+	  lblimgSrc.setBounds(12, 246, 399, 16);
+	  whatsChatProfilePanel.add(lblimgSrc);
+	  lblimgSrc.setForeground(Color.LIGHT_GRAY);
+	   
+	  btnAttachButton = new JButton("Attach");
+	  btnAttachButton.setBounds(91, 214, 97, 25);
+	  whatsChatProfilePanel.add(btnAttachButton);
+	  btnAttachButton.setBackground(buttonColor);
+	  btnAttachButton.setBorder(null);
+	  btnAttachButton.setForeground(Color.WHITE);
+	  lblUserId = new JLabel("");
+	  lblUserId.setBounds(254, 45, 325, 44);
+	  whatsChatProfilePanel.add(lblUserId);
+	  lblUserId.setFont(new Font("Bookman Old Style", Font.BOLD, 16));
+	  
+	  
+	  
+	  
+	  
+	  //textarea
+	  JScrollPane scrollPane = new JScrollPane();
+	  scrollPane.setBounds(253, 92, 441, 113);
+	  
+	  taDescription = new JTextArea();
+	  taDescription.setBorder(border);
+	  taDescription.setDisabledTextColor(Color.BLACK);
+	  taDescription.setEnabled(false);
+	  taDescription.setLineWrap(true);
+	  taDescription.setWrapStyleWord(true);
+	  scrollPane.setViewportView(taDescription);
+	  whatsChatProfilePanel.add(scrollPane);
+	  
+	  
+	  btnSubmitEdit = new JButton("Edit");
+	  btnSubmitEdit.setBounds(594, 212, 97, 25);
+	  whatsChatProfilePanel.add(btnSubmitEdit);
+	  btnSubmitEdit.setBackground(buttonColor);
+	  btnSubmitEdit.setBorder(null);
+	  btnSubmitEdit.setForeground(Color.WHITE);
+	  btnSubmitEdit.setBackground(buttonColor);
+	  btnSubmitEdit.setBorder(null);
+	  btnSubmitEdit.setForeground(Color.WHITE);
+	  
+	  btnCancel = new JButton("Cancel");
+	  btnCancel.setBackground(buttonColor);
+	  btnCancel.setBorder(null);
+	  btnCancel.setForeground(Color.WHITE);
+	  
+	  btnCancel.setBounds(480, 211, 97, 25);
+	  whatsChatProfilePanel.add(btnCancel);
+	  btnCancel.setEnabled(false);
+	  btnCancel.setVisible(false);
+	  
+	  btnBack = new JButton("Back");
+	  btnBack.setBounds(334, 439, 127, 44);
+	  btnBack.setBackground(buttonColor);
+	  btnBack.setForeground(Color.WHITE);
+	  btnBack.setBorder(null);
+	  btnBack.setVisible(false);
+	  whatsChatProfilePanel.add(btnBack);
+	  
+	  //=================================Setting Page==============================================
+	  reloadProfile();
+	  
+	  //================================Button Action==============================================
+	  btnBack.addActionListener(new ActionListener() {
+	   @Override
+	   public void actionPerformed(ActionEvent arg0) {
+	    System.out.println("Button Back");
+	    whatsChatProfilePanel.setVisible(false);
+	    whatschatGroupChat.setVisible(true);
+	   }
+	  });
+	  btnCancel.addActionListener(new ActionListener() {
+	   @Override
+	   public void actionPerformed(ActionEvent e) {
+	    taDescription.setEnabled(false);
+	    taDescription.setBorder(null);
+	    btnCancel.setEnabled(false);
+	    btnCancel.setVisible(false);
+	    btnSubmitEdit.setText("Edit");
+	    taDescription.setText("");
+	    
+	    
+	   }
+	  });
+	  
+	  //Button action
+	  btnSubmitEdit.addActionListener(new ActionListener() {
+	   @Override
+	   public void actionPerformed(ActionEvent arg0) {
+	    String buttonSelected = btnSubmitEdit.getText().toString();
+	    if(buttonSelected.equalsIgnoreCase("Edit")){
+	     taDescription.setEnabled(true);
+	     btnCancel.setEnabled(true);
+	     btnCancel.setVisible(true);
+	     taDescription.setBorder(border);
+	     btnSubmitEdit.setText("Submit");
+	    }
+	    else if(buttonSelected.equalsIgnoreCase("Submit")){
+	     taDescription.setEnabled(false);
+	     taDescription.setBorder(null);
+	     btnCancel.setEnabled(false);
+	     btnCancel.setVisible(false); 
+	     btnSubmitEdit.setText("Edit");
+	     profileSendRequest();
+	     
+	     //User Part
+	     currentUser.setDescription(taDescription.getText().toString());
+	     
+	    }
+	    
+	    
+	   }
+	  });
+	  btnAttachButton.addActionListener(new ActionListener() {
+	   public void actionPerformed(ActionEvent e) {
+	    chooser = new JFileChooser();
+	       chooser.showOpenDialog(null);
+	       chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+	       chooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
+	       //chooser.addChoosableFileFilter(new FileNameExtensionFilter("Image Files", ImageIO.getReaderFileSuffixes()));
+	       File f = chooser.getSelectedFile();
+	       String filename = f.getAbsolutePath();
+	       if(filename.endsWith(".jpg") || filename.endsWith(".png") ){
+	        try {
+	         String fileName=currentUser.getUsername()+".png";
+	            ii=scaledImage(fileName, lblProfilePicture, ImageIO.read(new File(f.getAbsolutePath())));//get the image from file chooser and scale it to match JLabel size
+	            lblProfilePicture.setIcon(ii);
+	            lblimgSrc.setText(filename);
+	            lblimgSrc.setForeground(Color.gray);
+	            
+	      //User Part
+	            profileSendRequest();
+	      currentUser.setProfilePicture(fileName);
+	      lblimgSrc.setText("");
+	      
+	      
+	           
+	      
+	        } catch (Exception ex) {
+	         lblimgSrc.setText("Incorrect File Source. Please Upload again.");
+	         lblimgSrc.setForeground(Color.RED);
+	            ex.printStackTrace();
+	        }
+	       }
+	       else{
+	        lblimgSrc.setText("Incorrect File Source. Please Upload again.");
+	        lblimgSrc.setForeground(Color.RED);
+	       }
 
-			 
-			    
+	    
+	       
 
-			}
-		});
-		
-	}
+	   }
+	  });
+	  
+	 }
 	
-	//======================================Profile===================================
-	
-	private void profileSendRequest(){
-		try {
-			for(int u =0; u<userList.size();u++){
-				if(userList.get(u).getUsername().equalsIgnoreCase(currentUser.getUsername())){
-					userList.get(u).setDescription(currentUser.getDescription());
-					userList.get(u).setProfilePicture(currentUser.getProfilePicture());	
-					break;
-				}
-			}
-			
-			byte[] buf = convertObjectToBytes(userList);
-			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
-			userMulticastSocket.send(dgpCheckUser);
-			TimeUnit.MILLISECONDS.sleep(500);
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-	}
-	
-	private void viewProfile(String userName){
-		try {
-			
-			System.out.println("Checking userList:" +userList.size());
-			
-			for(User u : userList){
-				if(u.getUsername().equalsIgnoreCase(userName)){
-					selectedProfile = u;
-					System.out.println("u:__"+u.getDescription());
-					System.out.println("u:__"+u.getProfilePicture());
-					System.out.println("u:__"+u.getUsername());
-					
-					
-				}
-			}
-			byte[] buf = convertObjectToBytes(selectedProfile);
-			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
-			userMulticastSocket.send(dgpCheckUser);
-			TimeUnit.MILLISECONDS.sleep(500);
-			
-		} catch (IOException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		} catch (InterruptedException e1) {
-			// TODO Auto-generated catch block
-			e1.printStackTrace();
-		}
-		
-	}
-	
-	private void reloadProfile(){
-		if(currentPage==1){
-			//currentUser = new User();
-			lblProfilePicture.setIcon(scaledImage(currentUser.getProfilePicture(),lblProfilePicture,null));
-			lblUserId.setText("UserID: "+currentUser.getUsername());
-			taDescription.setText(currentUser.getDescription());
-			btnSubmitEdit.setVisible(true);
-			btnSubmitEdit.setEnabled(true);
-			btnAttachButton.setEnabled(true);
-			btnAttachButton.setVisible(true);
-			btnBack.setEnabled(false);
-			btnBack.setVisible(false);
-			
+	 //======================================Profile===================================
+	 
+	 private void profileSendRequest(){
+	  try {
+	   for(int u =0; u<userList.size();u++){
+	    if(userList.get(u).getUsername().equalsIgnoreCase(currentUser.getUsername())){
+	     userList.get(u).setDescription(currentUser.getDescription());
+	     userList.get(u).setProfilePicture(currentUser.getProfilePicture()); 
+	     break;
+	    }
+	   }
+	   
+	   byte[] buf = convertObjectToBytes(userList);
+	   DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+	   userMulticastSocket.send(dgpCheckUser);
+	   TimeUnit.MILLISECONDS.sleep(1500);
+	  } catch (IOException e1) {
+	   // TODO Auto-generated catch block
+	   e1.printStackTrace();
+	  } catch (InterruptedException e1) {
+	   // TODO Auto-generated catch block
+	   e1.printStackTrace();
+	  }
+	  
+	 }
+	 
+	 private void viewProfile(String userName){
+	  try {
+	   
+	   System.out.println("Checking userList:" +userList.size());
+	   
+	   for(User u : userList){
+	    if(u.getUsername().equalsIgnoreCase(userName)){
+	     selectedProfile = u;
+	     System.out.println("u:__"+u.getDescription());
+	     System.out.println("u:__"+u.getProfilePicture());
+	     System.out.println(
+	 "u:__"+u.getUsername());
+	     
+	     
+	    }
+	   }
+	   byte[] buf = convertObjectToBytes(selectedProfile);
+	   DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
+	   userMulticastSocket.send(dgpCheckUser);
+	   TimeUnit.MILLISECONDS.sleep(500);
+	   
+	  } catch (IOException e1) {
+	   // TODO Auto-generated catch block
+	   e1.printStackTrace();
+	  } catch (InterruptedException e1) {
+	   // TODO Auto-generated catch block
+	   e1.printStackTrace();
+	  }
+	  
+	 }
+	 
+	 private void reloadProfile(){
+	  if(currentPage==1){
+	   //currentUser = new User();
+	   lblProfilePicture.setIcon(scaledImage(currentUser.getProfilePicture(),lblProfilePicture,null));
+	   lblUserId.setText("UserID: "+currentUser.getUsername());
+	   taDescription.setText(currentUser.getDescription());
+	   btnSubmitEdit.setVisible(true);
+	   btnSubmitEdit.setEnabled(true);
+	   btnAttachButton.setEnabled(true);
+	   btnAttachButton.setVisible(true);
+	   btnBack.setEnabled(false);
+	   btnBack.setVisible(false);
+	   
 
-		}
-		else if(currentPage==2){
-			lblProfilePicture.setIcon(scaledImage(selectedProfile.getProfilePicture(),lblProfilePicture,null));
-			lblUserId.setText("UserID: "+selectedProfile.getUsername());
-			taDescription.setText(selectedProfile.getDescription());	
-			btnSubmitEdit.setVisible(false);
-			btnSubmitEdit.setEnabled(false);
-			btnAttachButton.setEnabled(false);
-			btnAttachButton.setVisible(false);
-			btnBack.setEnabled(true);
-			btnBack.setVisible(true);
-			lblimgSrc.setText("");
-		}
-		System.out.println("CurrentPAge:"+currentPage);
-	}
-	//======================================Profile===================================
+	  }
+	  else if(currentPage==2){
+	   lblProfilePicture.setIcon(scaledImage(selectedProfile.getProfilePicture(),lblProfilePicture,null));
+	   lblUserId.setText("UserID: "+selectedProfile.getUsername());
+	   taDescription.setText(selectedProfile.getDescription()); 
+	   btnSubmitEdit.setVisible(false);
+	   btnSubmitEdit.setEnabled(false);
+	   btnAttachButton.setEnabled(false);
+	   btnAttachButton.setVisible(false);
+	   btnBack.setEnabled(true);
+	   btnBack.setVisible(true);
+	   lblimgSrc.setText("");
+	  }
+	  System.out.println("CurrentPAge:"+currentPage);
+	 }
+	 //======================================Profile===================================
 	
 	
 
@@ -1211,36 +1205,31 @@ public class Whatschat {
 	//--------------------------------------Phoebe-------------------------------
 	 
 	// Edit Group Name
-	public void editGroupName(String newGroupName) {
-		try {
-			
-			// To loop through the hash map 
-			for (Entry<String, ArrayList> m : userHashMap.entrySet()) {
-				String key = m.getKey();
-				ArrayList<String> value = m.getValue();
-				
-				// Check if group name is the same
-				if (!oldGroupName.matches(newGroupName)) {
-					// Changes made for group name
-					if (!m.getKey().matches(newGroupName)) {
-						userHashMap.put(newGroupName, (ArrayList<String>) m.getValue());
-						userHashMap.remove(oldGroupName);
-
-						String msg = "Group name changed to " + newGroupName;
-						byte[] buf = msg.getBytes();
-						DatagramPacket dgpSend = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-						multicastSocket.send(dgpSend);
-						taConverstaion.append(msg + "\n");
-					
-					}
-				}
-			}
-		} catch (IOException ex) {
-			ex.printStackTrace();
-		}
+	public void editGroupName(String oldGroupName,String newGroupName) {
+		//Send EDIT command to all selected users
+    	String msg = "EDIT:"+oldGroupName+":"+newGroupName;
+    	sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+		
 	}
 
-	
+	private void changeGroupName(String oldName, String newName){
+		System.out.println("changeGroupName");
+		//Change grouphashmap to new name with ip
+		//change userhashmap to new name with arraylist
+		//Change messageHashMap to new name with messages
+		
+		groupHashMap.put(newName, groupHashMap.remove(oldName));
+		userHashMap.put(newName, userHashMap.remove(oldName));
+		messageHashMap.put(newName, messageHashMap.remove(oldName));
+		
+		//update group list
+		listModelGroups.removeElement(oldName);
+		listModelGroups.addElement(newName);
+		
+		txtTitle.setText(newName);
+		activeGroupName = newName;
+		
+	}
 	
 	// Add Member
     public void addMember(List list) {
@@ -1250,17 +1239,16 @@ public class Whatschat {
     		
     		
     		for (int p = 0; p < list.size(); p++) {
-    			//Send JOIN command to all selected users
-    			String msg = "JOIN:"+list.get(p).toString()+":"+groupName;
-				sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
-				
-				
-				
-				//Add to arrayList
-				localArrayList.add(list.get(p).toString());
-				
-				//Add to uilist
-				groupMember.addElement(list.get(p).toString());
+    			if(!localArrayList.contains(list.get(p).toString())){
+    				//Send JOIN command to all selected users
+        			String msg = "JOIN:"+list.get(p).toString()+":"+groupName;
+    				sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+    				//Add to arrayList
+    				localArrayList.add(list.get(p).toString());
+    				
+    				//Add to uilist
+    				groupMember.addElement(list.get(p).toString());
+    			}
             }
 			userHashMap.put(groupName, localArrayList);
 			
@@ -1280,39 +1268,24 @@ public class Whatschat {
     // Delete Member
     public void deleteMember(List list) {
     	String groupName = txtTitle.getText().toString();
-    	
-    	//String msg = "LEAVE:"+username+":"+group;
-		//sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
-    	/*
-        try {
- 
-            System.out.println("DELETE");
- 
-            userHashMap.put("ICT2107", new ArrayList<String>());
-            userHashMap.get("ICT2107").add("a");
- 
-            for (int p = 0; p < list.size(); p++) {
- 
-                userHashMap.put(activeGroupName, new ArrayList<String>());
-                userHashMap.get(activeGroupName).add(list.get(p));
- 
-                String msg = list.get(p) + " is removed ";
-                byte[] buf = msg.getBytes();
-                DatagramPacket dgpConnected = new DatagramPacket(buf, buf.length, multicastGroup, 6789);
-                multicastSocket.send(dgpConnected);
-                groupMember.removeElement((String) list.get(p));
- 
-            }
- 
-        } catch (IOException ex) {
-            ex.printStackTrace();
-        }*/
+    	for (int p = 0; p < list.size(); p++) {
+			//Send LEAVE command to all selected users
+    		String msg = "LEAVE:"+list.get(p).toString()+":"+groupName;
+    		sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+        }
     }
 
 	// Leave Group
 	public void leaveGroup(String userName, String group) {
+		
 		//Update the userHashMap to remove self
+		System.out.println(group+ userName);
+		System.out.println(userHashMap.get(group)==null);
+		System.out.println(userHashMap.get(group));
 		ArrayList<String> localArrayList = userHashMap.get(group);
+		
+		
+		System.out.println(localArrayList.toString());
 		localArrayList.remove(userName);
 		userHashMap.put(group, localArrayList);
 		
@@ -1342,8 +1315,11 @@ public class Whatschat {
 		if(!listModelGroups.isEmpty()){
 			groupsList.setSelectedIndex(0);
 		}
+		
+		activeGroupName = "";
 	}
 
+	
 	
 	//====================================daniel======================================
 	private static void sendBroadcast(String message, InetAddress address, MulticastSocket socket,int port) {
@@ -1513,12 +1489,16 @@ public class Whatschat {
 											if(!data[1].equals(username)) {
 												String serial = data[3];
 												String[] deserialized = deserializeArray(serial);
+												ArrayList<String> arrayList = new ArrayList<String>(Arrays.asList(deserialized));
+												userHashMap.put(data[2], arrayList);
+												
 												//Update UI
 												groupMember.clear();
 												for (String item : deserialized) {
 												    System.out.println(item);
 												    groupMember.addElement(item);
 												}
+												
 											}
 										}
 										else if (data[0].equals("LEAVE")) {
@@ -1531,16 +1511,15 @@ public class Whatschat {
 												System.out.println(username +"join "+data[2]);
 												//Add delay
 												try {
-													Thread.sleep(500);
+													Thread.sleep(1500);
 												} catch (InterruptedException e1) {
 													e1.printStackTrace();
 												}
-												
 												joinChatGroup(data[2]);
-												
-												//TEST!	
-												
 											}
+										}
+										else if (data[0].equals("EDIT")){
+											changeGroupName(data[1],data[2]);
 										}
 										
 									}
