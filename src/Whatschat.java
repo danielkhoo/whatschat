@@ -1279,7 +1279,11 @@ public class Whatschat {
 	
     // Delete Member
     public void deleteMember(List list) {
- 
+    	String groupName = txtTitle.getText().toString();
+    	
+    	//String msg = "LEAVE:"+username+":"+group;
+		//sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+    	/*
         try {
  
             System.out.println("DELETE");
@@ -1302,7 +1306,7 @@ public class Whatschat {
  
         } catch (IOException ex) {
             ex.printStackTrace();
-        }
+        }*/
     }
 
 	// Leave Group
@@ -1518,7 +1522,9 @@ public class Whatschat {
 											}
 										}
 										else if (data[0].equals("LEAVE")) {
-											
+											if(data[1].equals(username)) {
+												leaveGroup(username, data[2]);
+											}
 										}
 										else if (data[0].equals("JOIN")) {
 											if(data[1].equals(username)) {
