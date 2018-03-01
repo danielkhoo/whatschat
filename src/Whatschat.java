@@ -15,6 +15,7 @@ import java.awt.image.BufferedImage;
 import java.io.ByteArrayInputStream;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.IOException;
 import java.io.ObjectInput;
 import java.io.ObjectInputStream;
@@ -54,6 +55,7 @@ import javax.swing.WindowConstants;
 import javax.swing.border.Border;
 import javax.swing.event.ListSelectionEvent;
 import javax.swing.event.ListSelectionListener;
+import javax.swing.filechooser.FileNameExtensionFilter;
 import javax.swing.plaf.basic.BasicScrollPaneUI.HSBChangeListener;
 
 
@@ -308,15 +310,13 @@ public class Whatschat {
 						for(User u :userList){
 							System.out.println("btnRegister:"+u.getUsername()+u.getDescription());
 						}
-						userList.add(new User(tfUserId.getText().trim()));
-						byte[] buf2 = convertObjectToBytes(userList);
-						DatagramPacket dgpUserList = new DatagramPacket(buf2, buf2.length, userMulticastGroup, 6789);
-						userMulticastSocket.send(dgpUserList);
-						TimeUnit.MILLISECONDS.sleep(1000);
+						
+
 
 						if (userAvail == true) {
 							btnRegister.setEnabled(false);
 							myID = tfUserId.getText().toString();
+							
 							
 //							String getUsers = "GETALLUSER:" + myID;
 //							byte[] buf1 = getUsers.getBytes();
@@ -337,6 +337,13 @@ public class Whatschat {
 							whatschatGroupChat.setVisible(false);
 							whatsChatProfilePanel.setVisible(true);
 							currentPage=1;
+							//-------------YH----------------------
+							
+							userList.add(new User(tfUserId.getText().trim()));
+							byte[] buf2 = convertObjectToBytes(userList);
+							DatagramPacket dgpUserList = new DatagramPacket(buf2, buf2.length, userMulticastGroup, 6789);
+							userMulticastSocket.send(dgpUserList);
+							TimeUnit.MILLISECONDS.sleep(1000);
 							
 							
 						}
@@ -540,37 +547,9 @@ public class Whatschat {
 		lblGroupChat.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseClicked(MouseEvent e) {
-
-				//ArrayList Part
-					int q=0;
-				//Network Part
-				//profileSendRequest();
-					try {
-						
-						
-						for(int u =0; u<userList.size();u++){
-							if(userList.get(u).getUsername().equalsIgnoreCase(currentUser.getUsername())){
-								userList.get(u).setDescription(currentUser.getDescription());
-								userList.get(u).setProfilePicture(currentUser.getProfilePicture());	
-								System.out.println("Same Name!?");
-								q=u;
-							}
-						}
-						System.out.println("SelectGroupChat:"+userList.get(q).getDescription());
-						System.out.println("SelectGroupChat:"+userList.get(q).getProfilePicture());
-						
-						byte[] buf = convertObjectToBytes(userList);
-						DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
-						userMulticastSocket.send(dgpCheckUser);
-						TimeUnit.MILLISECONDS.sleep(1000);
-					} catch (IOException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					} catch (InterruptedException e1) {
-						// TODO Auto-generated catch block
-						e1.printStackTrace();
-					}
-
+				//Arraylist and Network Part
+				profileSendRequest();
+				
 				//Interface part
 				System.out.println("Groupchat clicked");
 				whatsChatProfilePanel.setVisible(false);
@@ -987,6 +966,7 @@ public class Whatschat {
 					btnCancel.setEnabled(false);
 					btnCancel.setVisible(false);	
 					btnSubmitEdit.setText("Edit");
+					profileSendRequest();
 					
 					//User Part
 					currentUser.setDescription(taDescription.getText().toString());
@@ -1001,10 +981,11 @@ public class Whatschat {
 				chooser = new JFileChooser();
 			    chooser.showOpenDialog(null);
 			    chooser.setFileSelectionMode(JFileChooser.FILES_AND_DIRECTORIES);
+			    chooser.addChoosableFileFilter(new FileNameExtensionFilter("Images", "jpg", "png", "gif", "bmp"));
 			    //chooser.addChoosableFileFilter(new FileNameExtensionFilter("Image Files", ImageIO.getReaderFileSuffixes()));
 			    File f = chooser.getSelectedFile();
 			    String filename = f.getAbsolutePath();
-			    if(filename.endsWith(".jpg") || filename.endsWith(".png")){
+			    if(filename.endsWith(".jpg") || filename.endsWith(".png") ){
 				    try {
 				    	String fileName=currentUser.getUsername()+".png";
 				        ii=scaledImage(fileName, lblProfilePicture, ImageIO.read(new File(f.getAbsolutePath())));//get the image from file chooser and scale it to match JLabel size
@@ -1013,7 +994,10 @@ public class Whatschat {
 				        lblimgSrc.setForeground(Color.gray);
 				        
 						//User Part
+				        profileSendRequest();
 						currentUser.setProfilePicture(fileName);
+						lblimgSrc.setText("");
+						
 						
 				       
 						
@@ -1037,13 +1021,21 @@ public class Whatschat {
 	}
 	
 	//======================================Profile===================================
+	
 	private void profileSendRequest(){
 		try {
+			for(int u =0; u<userList.size();u++){
+				if(userList.get(u).getUsername().equalsIgnoreCase(currentUser.getUsername())){
+					userList.get(u).setDescription(currentUser.getDescription());
+					userList.get(u).setProfilePicture(currentUser.getProfilePicture());	
+					break;
+				}
+			}
+			
 			byte[] buf = convertObjectToBytes(userList);
-			System.out.println("Checking userList:" +userList.size());
 			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
 			userMulticastSocket.send(dgpCheckUser);
-			TimeUnit.MILLISECONDS.sleep(1000);
+			TimeUnit.MILLISECONDS.sleep(500);
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
 			e1.printStackTrace();
@@ -1072,7 +1064,7 @@ public class Whatschat {
 			byte[] buf = convertObjectToBytes(selectedProfile);
 			DatagramPacket dgpCheckUser = new DatagramPacket(buf, buf.length, userMulticastGroup, 6789);
 			userMulticastSocket.send(dgpCheckUser);
-			TimeUnit.MILLISECONDS.sleep(1000);
+			TimeUnit.MILLISECONDS.sleep(500);
 			
 		} catch (IOException e1) {
 			// TODO Auto-generated catch block
