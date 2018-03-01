@@ -785,6 +785,20 @@ public class Whatschat {
 			}
 		});
 		
+		btnRemove.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// getSelectedIndices = returns array
+				deleteMember(memberList.getSelectedValuesList());
+			}
+		});
+		
+		btnLeave.addActionListener(new ActionListener() {
+			public void actionPerformed(ActionEvent e) {
+				// getSelectedIndices = returns array
+				leaveGroup("user1");
+			}
+		});
+		
 		
 
 	}
