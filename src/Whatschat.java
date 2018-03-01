@@ -777,16 +777,27 @@ public class Whatschat {
 					//txtJoinGroup.setText(groupName);
 					
 					groupHashMap.put(groupName, ip);
+					
+					
 					//selfjoin
 					joinChatGroup(groupName);
 					
+					ArrayList<String> localArrayList = new ArrayList<String>();
+					localArrayList.add(myID);
 					
 					// get each user in the list and send them join command
 					int selected[]= onlineUserlist.getSelectedIndices();
 					for(int i=0; i<selected.length;i++) {
+						
 						String msg = "JOIN:"+listModelUsers.getElementAt(selected[i])+":"+txtNewGroupName.getText().trim();
 						sendBroadcast(msg, defaultGroup, defaultSocket, 6789);
+						
+						//Add to arrayList
+						localArrayList.add(listModelUsers.getElementAt(selected[i]));
+						
 					}
+					
+					userHashMap.put(groupName, localArrayList);
 				}
 				
 			}
