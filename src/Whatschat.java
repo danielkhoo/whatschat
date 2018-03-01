@@ -557,20 +557,29 @@ public class Whatschat {
 		whatschatGroupChat.add(mainChatPanel);
 		mainChatPanel.setLayout(null);
 		
+		JButton btnRemove = new JButton("Remove");
+		btnRemove.setBounds(596, 265, 102, 29);
+		mainChatPanel.add(btnRemove);
+		btnRemove.setBackground(buttonColor);
+		btnRemove.setBorder(null);
+		btnRemove.setForeground(Color.WHITE);
+		
+		
+		
 		lblMembers = new JLabel("Members");
 		lblMembers.setBounds(596, 8, 90, 29);
 		mainChatPanel.add(lblMembers);
 		lblMembers.setFont(new Font("Bookman Old Style", Font.BOLD, 18));
 		
 		memberList = new JList();
-		memberList.setBounds(543, 42, 189, 265);
+		memberList.setBounds(542, 42, 191, 266);
 		mainChatPanel.add(memberList);
 		memberList.setBorder(border);
 		
 		
 		//textarea and conversation
 		JScrollPane scrollPaneConversation = new JScrollPane();
-		scrollPaneConversation.setBounds(0, 0, 544, 307);
+		scrollPaneConversation.setBounds(0, 0, 544, 310);
 		taConverstaion = new JTextArea();
 		scrollPaneConversation.setViewportView(taConverstaion);
 		taConverstaion.setEditable(false);
@@ -578,13 +587,7 @@ public class Whatschat {
 		taConverstaion.setBackground(Color.WHITE);
 		mainChatPanel.add(scrollPaneConversation);
 		
-		
-		btnRemove = new JButton("Remove");
-		btnRemove.setBounds(0, 0, 102, 29);
-		mainChatPanel.add(btnRemove);
-		btnRemove.setBackground(buttonColor);
-		btnRemove.setBorder(null);
-		btnRemove.setForeground(Color.WHITE);
+	
 		
 		conversationPanel = new JPanel();
 		conversationPanel.setBounds(0, 367, 732, 103);
