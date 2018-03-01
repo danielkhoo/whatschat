@@ -1294,6 +1294,7 @@ public class Whatschat {
 	}
 	
 	private void joinChatGroup(String groupName) {
+		
 		try {
 			System.out.println(username + " JOIN FUNCTION " + groupName);
 			if (multicastSocket == null) {
@@ -1453,6 +1454,7 @@ public class Whatschat {
 												} catch (InterruptedException e1) {
 													e1.printStackTrace();
 												}
+												
 												joinChatGroup(data[2]);
 											}
 										}
